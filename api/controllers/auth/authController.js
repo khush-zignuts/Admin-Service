@@ -3,8 +3,8 @@ const VALIDATOR = require("validatorjs");
 
 const jwt = require("jsonwebtoken");
 
-const { HTTP_STATUS_CODES, TOKEN_EXPIRY } = require("../../config/constant");
-const { VALIDATION_RULES } = require("../../config/validationRules");
+const { HTTP_STATUS_CODES, TOKEN_EXPIRY } = require("../../../config/constant");
+const { VALIDATION_RULES } = require("../../../config/validationRules");
 const {
   hashPw,
   verifyOTP,
@@ -25,6 +25,7 @@ module.exports = {
         email: VALIDATION_RULES.USER.EMAIL,
         password: VALIDATION_RULES.USER.PASSWORD,
         name: VALIDATION_RULES.USER.NAME,
+        phoneNumber: VALIDATION_RULES.USER.PHONE_NUMBER,
       });
 
       if (validation.fails()) {
@@ -38,8 +39,8 @@ module.exports = {
 
       // Check if user exists
       const existingUser = await User.findOne({
-        where: { email },
-        isDeleted: false,
+        where: { email, isDeleted: false },
+
         attributes: ["id"],
       });
 

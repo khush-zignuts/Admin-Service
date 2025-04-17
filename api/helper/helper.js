@@ -1,6 +1,6 @@
 // helpers/helper.js
 const bcrypt = require("bcrypt");
-const { OTP_EXPIRY } = require("../config/constant");
+const { OTP_EXPIRY } = require("../../config/constant");
 const { v4: uuidv4 } = require("uuid");
 
 const generateUUID = () => uuidv4();
