@@ -174,7 +174,7 @@ module.exports = {
 
   updateEvent: async (req, res) => {
     try {
-      const { id } = req.params;
+      const { id } = req.params.id;
 
       const event = await Event.findByPk(id);
 
@@ -203,7 +203,6 @@ module.exports = {
         await event.update(updatedData);
       }
 
-      // Return a success response with the updated event
       return res.status(HTTP_STATUS_CODES.OK).json({
         success: true,
         statusCode: HTTP_STATUS_CODES.OK,
@@ -225,15 +224,37 @@ module.exports = {
 
   deleteEvent: async (req, res) => {
     try {
-      const event = await Event.findByPk(req.params.id);
-      if (!event) return res.status(404).json({ error: "Event not found" });
+      const { id } = req.params.id;
 
-      await event.destroy();
+      const event = await Event.findByPk(id);
+      if (!event) {
+        return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({
+          status: HTTP_STATUS_CODES.NOT_FOUND,
+          message: "Event not found",
+          data: null,
+          error: "No event with the provided ID",
+        });
+      }
 
-      res.status(200).json({ message: "Event deleted successfully" });
+      event.isDeleted = true;
+      event.deletedAt = new Date();
+      event.updatedBy = req.user.id;
+      await event.save();
+
+      return res.status(HTTP_STATUS_CODES.OK).json({
+        status: HTTP_STATUS_CODES.OK,
+        message: "Event deleted successfully",
+        data: { id: event.id },
+        error: "",
+      });
     } catch (error) {
       console.error("Delete Event Error:", error);
-      res.status(500).json({ error: "Failed to delete event" });
+      return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+        status: HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR,
+        message: "Failed to delete event",
+        data: "",
+        error: error.message,
+      });
     }
   },
 };
