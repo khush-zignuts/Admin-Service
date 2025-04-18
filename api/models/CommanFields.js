@@ -1,6 +1,6 @@
 const { DataTypes } = require("sequelize");
 
-const CommonField = {
+const CommonFields = {
   createdAt: {
     type: DataTypes.BIGINT,
     field: "created_at",
@@ -45,4 +45,18 @@ const CommonField = {
   },
 };
 
-module.exports = CommonField;
+const commonOptions = {
+  timestamps: false,
+  hooks: {
+    beforeCreate: (table, options) => {
+      const now = Math.floor(Date.now() / 1000);
+      table.createdAt = now;
+      table.updatedAt = now;
+    },
+    beforeUpdate: (table, options) => {
+      table.updatedAt = Math.floor(Date.now() / 1000);
+    },
+  },
+};
+
+module.exports = { CommonFields, commonOptions };

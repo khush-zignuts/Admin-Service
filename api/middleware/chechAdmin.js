@@ -1,26 +1,27 @@
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
-const { User } = require("../models/index");
-const { HTTP_STATUS_CODES } = require("../config/constant");
+const { Admin } = require("../models/index");
+const { HTTP_STATUS_CODES } = require("../../config/constant");
 
-const checkUser = async (req, res, next) => {
+const checkAdmin = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.json({
         status: HTTP_STATUS_CODES.UNAUTHORIZED,
-        message: i18n.__("api.errors.unauthorized"),
+        message: "Unauthorized access. Token missing or malformed.",
         data: "",
         error: "",
       });
     }
+
     const token = authHeader.split(" ")[1];
 
     if (!token) {
       return res.json({
         status: HTTP_STATUS_CODES.UNAUTHORIZED,
-        message: i18n.__("Access denied. No token provided."),
+        message: "Access denied. No token provided.",
         data: "",
         error: "",
       });
@@ -28,42 +29,41 @@ const checkUser = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.SECRET_KEY);
 
-    const user = await User.findOne({
+    const admin = await Admin.findOne({
       where: { id: decoded.id },
       attributes: ["id", "accessToken"],
     });
 
-    if (!user) {
+    if (!admin) {
       return res.json({
         status: HTTP_STATUS_CODES.UNAUTHORIZED,
-        message: i18n.__("api.errors.unauthorized"),
+        message: "Admin not found.",
         data: "",
         error: "",
       });
     }
 
-    if (user.accessToken !== token) {
+    if (admin.accessToken !== token) {
       return res.json({
         status: HTTP_STATUS_CODES.UNAUTHORIZED,
-        message: i18n.__(
-          "api.errors.unauthorized" || "Invalid or expired token."
-        ),
+        message: "Invalid or expired token.",
         data: "",
         error: "",
       });
     }
 
-    req.user = user;
+    // Set admin on request object
+    req.admin = admin;
 
-    next();
+    next(); // Proceed if admin
   } catch (error) {
     return res.json({
       status: HTTP_STATUS_CODES.UNAUTHORIZED,
-      message: i18n.__("api.errors.unauthorized"),
-      data: null,
+      message: "Unauthorized access.",
+      data: "",
       error: error.message,
     });
   }
 };
 
-module.exports = checkUser;
+module.exports = checkAdmin;

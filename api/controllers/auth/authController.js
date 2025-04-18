@@ -12,7 +12,7 @@ const {
   generateUUID,
 } = require("../../helper/helper");
 
-const { User } = require("../../models/index");
+const { Admin } = require("../../models/index");
 const sendEmail = require("../../utils/sendEmail");
 
 module.exports = {
@@ -22,10 +22,10 @@ module.exports = {
       console.log("req.body: ", req.body);
 
       const validation = new VALIDATOR(req.body, {
-        email: VALIDATION_RULES.USER.EMAIL,
-        password: VALIDATION_RULES.USER.PASSWORD,
-        name: VALIDATION_RULES.USER.NAME,
-        phoneNumber: VALIDATION_RULES.USER.PHONE_NUMBER,
+        email: VALIDATION_RULES.ADMIN.EMAIL,
+        password: VALIDATION_RULES.ADMIN.PASSWORD,
+        name: VALIDATION_RULES.ADMIN.NAME,
+        phoneNumber: VALIDATION_RULES.ADMIN.PHONE_NUMBER,
       });
 
       if (validation.fails()) {
@@ -38,18 +38,18 @@ module.exports = {
       }
 
       // Check if user exists
-      const existingUser = await User.findOne({
+      const existingAdmin = await Admin.findOne({
         where: { email, isDeleted: false },
 
         attributes: ["id"],
       });
 
-      if (existingUser) {
+      if (existingAdmin) {
         return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
           status: HTTP_STATUS_CODES.BAD_REQUEST,
           message: "User already exists.",
           data: "",
-          error: "EMAIL_ALREADY_REGISTERED",
+          error: "",
         });
       }
 
@@ -63,14 +63,13 @@ module.exports = {
       const otpCreated = Math.floor(Date.now() / 1000);
       const uuid = generateUUID();
 
-      await User.create({
+      await Admin.create({
         id: uuid,
         email,
         password: hashedPassword,
         name,
         otp: otp,
         otpCreatedAt: otpCreated,
-        role: "admin",
         phoneNumber: phoneNumber,
         createdAt: otpCreated,
         createdBy: uuid,
@@ -105,7 +104,7 @@ module.exports = {
       const { email, otp } = req.body;
 
       const validation = new VALIDATOR(req.body, {
-        email: VALIDATION_RULES.USER.EMAIL,
+        email: VALIDATION_RULES.ADMIN.EMAIL,
       });
 
       if (validation.fails()) {
@@ -117,13 +116,12 @@ module.exports = {
         });
       }
 
-      const user = await User.findOne({
-        where: { email },
-        isDeleted: false,
+      const admin = await Admin.findOne({
+        where: { email, isDeleted: false },
         attributes: ["id", "otp", "otpCreatedAt"],
       });
 
-      if (!user) {
+      if (!admin) {
         return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({
           status: HTTP_STATUS_CODES.NOT_FOUND,
           message: "User not found.",
@@ -132,7 +130,7 @@ module.exports = {
         });
       }
 
-      const isValid = verifyOTP(otp, user.otp, user.otpCreatedAt);
+      const isValid = verifyOTP(otp, admin.otp, admin.otpCreatedAt);
 
       if (!isValid) {
         return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
@@ -164,8 +162,8 @@ module.exports = {
       const { email, password } = req.body;
 
       const validation = new VALIDATOR(req.body, {
-        email: VALIDATION_RULES.USER.EMAIL,
-        password: VALIDATION_RULES.USER.PASSWORD,
+        email: VALIDATION_RULES.ADMIN.EMAIL,
+        password: VALIDATION_RULES.ADMIN.PASSWORD,
       });
 
       if (validation.fails()) {
@@ -177,12 +175,12 @@ module.exports = {
         });
       }
 
-      const user = await User.findOne({
-        where: { email },
+      const admin = await Admin.findOne({
+        where: { email, isDeleted: false },
         attributes: ["id", "email", "password", "accessToken"],
       });
 
-      if (!user) {
+      if (!admin) {
         return res.status(HTTP_STATUS_CODES.UNAUTHORIZED).json({
           status: HTTP_STATUS_CODES.UNAUTHORIZED,
           message: "User not found.",
@@ -191,7 +189,7 @@ module.exports = {
         });
       }
 
-      const valid = await comparePassword(password, user.password);
+      const valid = await comparePassword(password, admin.password);
 
       if (!valid) {
         return res.status(HTTP_STATUS_CODES.UNAUTHORIZED).json({
@@ -202,17 +200,17 @@ module.exports = {
         });
       }
 
-      const token = jwt.sign({ id: user.id }, process.env.SECRET_KEY, {
+      const token = jwt.sign({ id: admin.id }, process.env.SECRET_KEY, {
         expiresIn: TOKEN_EXPIRY.ACCESS_TOKEN,
       });
 
-      user.accessToken = token;
-      await user.save();
+      admin.accessToken = token;
+      await admin.save();
 
       return res.status(HTTP_STATUS_CODES.OK).json({
         status: HTTP_STATUS_CODES.OK,
         message: "Login successful.",
-        data: { token, userId: user.id },
+        data: { token, adminId: admin.id },
         error: "",
       });
     } catch (error) {
@@ -227,14 +225,14 @@ module.exports = {
 
   logout: async (req, res) => {
     try {
-      const { userId } = req.params;
+      const { adminId } = req.params;
 
-      const user = await User.findOne({
-        where: { id: userId, isDeleted: false },
+      const admin = await Admin.findOne({
+        where: { id: adminId, isDeleted: false },
         attributes: ["id", "name", "accessToken"],
       });
 
-      if (!user) {
+      if (!admin) {
         return res.json({
           status: HTTP_STATUS_CODES.NOT_FOUND,
           message: "invalidCredentials",
@@ -242,7 +240,7 @@ module.exports = {
           error: "",
         });
       }
-      if (!user.accessToken) {
+      if (!admin.accessToken) {
         return res.json({
           status: HTTP_STATUS_CODES.BAD_REQUEST,
           message: "Already logged out",
@@ -251,7 +249,7 @@ module.exports = {
         });
       }
       // Set accessToken to NULL (logout)
-      await User.update(
+      await admin.update(
         {
           accessToken: null,
           updatedAt: Math.floor(Date.now() / 1000),
@@ -259,7 +257,7 @@ module.exports = {
           isLogin: false,
           isOnlin: false,
         },
-        { where: { id: userId, isDeleted: false } }
+        { where: { id: adminId, isDeleted: false } }
       );
       return res.json({
         status: HTTP_STATUS_CODES.OK,

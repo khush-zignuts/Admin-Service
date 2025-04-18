@@ -2,8 +2,8 @@ const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/db");
 const { CommonFields, commonOptions } = require("./CommanFields");
 
-const User = sequelize.define(
-  "User",
+const Admin = sequelize.define(
+  "Admin",
   {
     id: {
       type: DataTypes.UUID,
@@ -11,7 +11,6 @@ const User = sequelize.define(
       primaryKey: true,
       allowNull: false,
     },
-
     name: {
       type: DataTypes.STRING(30),
       allowNull: false,
@@ -21,7 +20,6 @@ const User = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
-
     password: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -48,10 +46,10 @@ const User = sequelize.define(
     ...CommonFields,
   },
   {
-    tableName: "user",
+    tableName: "admin",
     freezeTableName: true,
     ...commonOptions,
   }
 );
 
-module.exports = User;
+module.exports = Admin;
