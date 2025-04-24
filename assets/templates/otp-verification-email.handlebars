@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Verify Your Email</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 40px;
+    }
+    .container {
+      background-color: #ffffff;
+      max-width: 600px;
+      margin: auto;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    .logo {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .otp-box {
+      font-size: 24px;
+      font-weight: bold;
+      background-color: #e9f5ff;
+      color: #007bff;
+      padding: 15px;
+      text-align: center;
+      border-radius: 8px;
+      letter-spacing: 3px;
+      margin: 20px 0;
+    }
+    .footer {
+      font-size: 12px;
+      text-align: center;
+      color: #888;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <h2> Welcome to {{appName}}</h2>
+    </div>
+    <p>Hi {{userName}},</p>
+    <p>Thanks for signing up! To complete your registration, please use the OTP below:</p>
+
+    <div class="otp-box">{{otp}}</div>
+
+    <p>This OTP is valid for the next 10 minutes. Please do not share this code with anyone.</p>
+
+    <p>If you didn’t request this, you can safely ignore this email.</p>
+
+    <div class="footer">
+      &copy; {{year}} {{appName}}. All rights reserved.
+    </div>
+  </div>
+</body>
+</html>

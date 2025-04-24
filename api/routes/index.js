@@ -1,12 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const authRoutes = require("./auth/authRoutes");
-const eventRoutes = require("./event/eventRoutes");
+const organizerRoutes = require("./organizer/index");
+const adminRoutes = require("./admin/index");
 
-//authentication
-router.use("/auth", authRoutes);
+//admin Routes
+router.use("/admin", adminRoutes);
+//organizer
+router.use("/organizer", organizerRoutes);
 
-//event Routes
-router.use("/event", eventRoutes);
 
 module.exports = router;

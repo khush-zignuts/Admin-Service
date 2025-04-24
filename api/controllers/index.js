@@ -1,9 +1,7 @@
-const express = require("express");
-
-const authController = require("./auth/authController");
-const eventController = require("./event/eventController");
+const AdminController = require("./admin/index");
+const OrganizerController = require("./organizer/index");
 
 module.exports = {
-  authController,
-  eventController,
+  AdminController,
+  OrganizerController,
 };

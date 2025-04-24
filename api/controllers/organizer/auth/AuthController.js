@@ -2,30 +2,29 @@ const otpGenerator = require("otp-generator");
 const VALIDATOR = require("validatorjs");
 
 const jwt = require("jsonwebtoken");
-
-const { HTTP_STATUS_CODES, TOKEN_EXPIRY } = require("../../../config/constant");
-const { VALIDATION_RULES } = require("../../../config/validationRules");
+const generateUUID = require("../../../utils/generateUUID");
+const verifyOTP = require("../../../utils/verifyOtp");
+const hashPw = require("../../../utils/hashPw");
+const comparePassword = require("../../../utils/comparePassword");
 const {
-  hashPw,
-  verifyOTP,
-  comparePassword,
-  generateUUID,
-} = require("../../helper/helper");
+  HTTP_STATUS_CODES,
+  TOKEN_EXPIRY,
+} = require("../../../../config/constant");
+const { VALIDATION_RULES } = require("../../../../config/validationRules");
 
-const { Admin } = require("../../models/index");
-const sendEmail = require("../../utils/sendEmail");
+const { Organizer } = require("../../../models/index");
+const sendEmail = require("../../../helper/sendEmail");
 
 module.exports = {
   signup: async (req, res) => {
     try {
       const { email, password, name, phoneNumber } = req.body;
-      console.log("req.body: ", req.body);
 
       const validation = new VALIDATOR(req.body, {
-        email: VALIDATION_RULES.ADMIN.EMAIL,
-        password: VALIDATION_RULES.ADMIN.PASSWORD,
-        name: VALIDATION_RULES.ADMIN.NAME,
-        phoneNumber: VALIDATION_RULES.ADMIN.PHONE_NUMBER,
+        email: VALIDATION_RULES.ORGANIZER.EMAIL,
+        password: VALIDATION_RULES.ORGANIZER.PASSWORD,
+        name: VALIDATION_RULES.ORGANIZER.NAME,
+        phoneNumber: VALIDATION_RULES.ORGANIZER.PHONE_NUMBER,
       });
 
       if (validation.fails()) {
@@ -38,13 +37,12 @@ module.exports = {
       }
 
       // Check if user exists
-      const existingAdmin = await Admin.findOne({
+      const existingOrganizer = await Organizer.findOne({
         where: { email, isDeleted: false },
-
         attributes: ["id"],
       });
 
-      if (existingAdmin) {
+      if (existingOrganizer) {
         return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
           status: HTTP_STATUS_CODES.BAD_REQUEST,
           message: "User already exists.",
@@ -63,7 +61,7 @@ module.exports = {
       const otpCreated = Math.floor(Date.now() / 1000);
       const uuid = generateUUID();
 
-      await Admin.create({
+      await Organizer.create({
         id: uuid,
         email,
         password: hashedPassword,
@@ -79,9 +77,20 @@ module.exports = {
 
       otpStore[email] = otp;
 
-      const html = `<h2>Your OTP is: ${otp}</h2><p>It is valid for 5 minutes.</p>`;
+      const templateData = {
+        userName: name,
+        otp: otp,
+        appName: "Event Management",
+        year: new Date().getFullYear(),
+      };
 
-      await sendEmail(email, "Your OTP for Signup", html);
+      console.log("templateData: ", templateData);
+      await sendEmail(
+        email,
+        "Verify Your Email - OTP",
+        "../assets/templates/otp-verification-email.handlebars",
+        templateData
+      );
 
       return res.status(HTTP_STATUS_CODES.OK).json({
         status: HTTP_STATUS_CODES.OK,
@@ -104,7 +113,7 @@ module.exports = {
       const { email, otp } = req.body;
 
       const validation = new VALIDATOR(req.body, {
-        email: VALIDATION_RULES.ADMIN.EMAIL,
+        email: VALIDATION_RULES.ORGANIZER.EMAIL,
       });
 
       if (validation.fails()) {
@@ -116,12 +125,12 @@ module.exports = {
         });
       }
 
-      const admin = await Admin.findOne({
+      const organizer = await Organizer.findOne({
         where: { email, isDeleted: false },
         attributes: ["id", "otp", "otpCreatedAt"],
       });
 
-      if (!admin) {
+      if (!organizer) {
         return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({
           status: HTTP_STATUS_CODES.NOT_FOUND,
           message: "User not found.",
@@ -130,7 +139,7 @@ module.exports = {
         });
       }
 
-      const isValid = verifyOTP(otp, admin.otp, admin.otpCreatedAt);
+      const isValid = verifyOTP(otp, organizer.otp, organizer.otpCreatedAt);
 
       if (!isValid) {
         return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
@@ -162,8 +171,8 @@ module.exports = {
       const { email, password } = req.body;
 
       const validation = new VALIDATOR(req.body, {
-        email: VALIDATION_RULES.ADMIN.EMAIL,
-        password: VALIDATION_RULES.ADMIN.PASSWORD,
+        email: VALIDATION_RULES.ORGANIZER.EMAIL,
+        password: VALIDATION_RULES.ORGANIZER.PASSWORD,
       });
 
       if (validation.fails()) {
@@ -175,12 +184,12 @@ module.exports = {
         });
       }
 
-      const admin = await Admin.findOne({
+      const organizer = await Organizer.findOne({
         where: { email, isDeleted: false },
         attributes: ["id", "email", "password", "accessToken"],
       });
 
-      if (!admin) {
+      if (!organizer) {
         return res.status(HTTP_STATUS_CODES.UNAUTHORIZED).json({
           status: HTTP_STATUS_CODES.UNAUTHORIZED,
           message: "User not found.",
@@ -189,7 +198,7 @@ module.exports = {
         });
       }
 
-      const valid = await comparePassword(password, admin.password);
+      const valid = await comparePassword(password, organizer.password);
 
       if (!valid) {
         return res.status(HTTP_STATUS_CODES.UNAUTHORIZED).json({
@@ -200,17 +209,17 @@ module.exports = {
         });
       }
 
-      const token = jwt.sign({ id: admin.id }, process.env.SECRET_KEY, {
+      const token = jwt.sign({ id: organizer.id }, process.env.SECRET_KEY, {
         expiresIn: TOKEN_EXPIRY.ACCESS_TOKEN,
       });
 
-      admin.accessToken = token;
-      await admin.save();
+      organizer.accessToken = token;
+      await organizer.save();
 
       return res.status(HTTP_STATUS_CODES.OK).json({
         status: HTTP_STATUS_CODES.OK,
         message: "Login successful.",
-        data: { token, adminId: admin.id },
+        data: { token, organizerId: organizer.id },
         error: "",
       });
     } catch (error) {
@@ -225,14 +234,14 @@ module.exports = {
 
   logout: async (req, res) => {
     try {
-      const { adminId } = req.params;
+      const organizerId = req.organizer.id;
 
-      const admin = await Admin.findOne({
-        where: { id: adminId, isDeleted: false },
+      const organizer = await Organizer.findOne({
+        where: { id: organizerId, isDeleted: false },
         attributes: ["id", "name", "accessToken"],
       });
 
-      if (!admin) {
+      if (!organizer) {
         return res.json({
           status: HTTP_STATUS_CODES.NOT_FOUND,
           message: "invalidCredentials",
@@ -240,7 +249,7 @@ module.exports = {
           error: "",
         });
       }
-      if (!admin.accessToken) {
+      if (!organizer.accessToken) {
         return res.json({
           status: HTTP_STATUS_CODES.BAD_REQUEST,
           message: "Already logged out",
@@ -249,7 +258,7 @@ module.exports = {
         });
       }
       // Set accessToken to NULL (logout)
-      await admin.update(
+      await organizer.update(
         {
           accessToken: null,
           updatedAt: Math.floor(Date.now() / 1000),
@@ -257,7 +266,7 @@ module.exports = {
           isLogin: false,
           isOnlin: false,
         },
-        { where: { id: adminId, isDeleted: false } }
+        { where: { id: organizerId, isDeleted: false } }
       );
       return res.json({
         status: HTTP_STATUS_CODES.OK,

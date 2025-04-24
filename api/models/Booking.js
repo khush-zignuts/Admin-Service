@@ -25,7 +25,7 @@ const Booking = sequelize.define(
       allowNull: false,
       field: "organiser_id",
       references: {
-        model: "admin",
+        model: "organizer",
         key: "id",
       },
     },

@@ -8,12 +8,24 @@ const EventReminder = require("./EventReminder");
 const Message = require("./Message");
 const User = require("./User");
 const Notification = require("./Notification");
+const Organizer = require("./Organizer");
 
 // ================= ASSOCIATIONS =====================
 
+// Admin.sync({ force: true, alter: true });
+// Booking.sync({ force: true, alter: true });
+// Chat.sync({ force: true, alter: true });
+// EmailQueue.sync({ force: true, alter: true });
+// Event.sync({ force: true, alter: true });
+// EventFeedback.sync({ force: true, alter: true });
+// EventReminder.sync({ force: true, alter: true });
+// Message.sync({ force: true, alter: true });
+// // User.sync({ force: true, alter: true });
+// Notification.sync({ force: true, alter: true });
+
 // Admin and Event
-Admin.hasMany(Event, { foreignKey: "organizerId", onDelete: "CASCADE" });
-Event.belongsTo(Admin, { foreignKey: "organizerId" });
+Admin.hasMany(Event, { foreignKey: "organiserId", onDelete: "CASCADE" });
+Event.belongsTo(Admin, { foreignKey: "organiserId" });
 
 // User and Booking
 User.hasMany(Booking, { foreignKey: "userId", onDelete: "CASCADE" });
@@ -75,6 +87,7 @@ module.exports = {
   Booking,
   Chat,
   Message,
+  Organizer,
   Admin,
   EmailQueue,
   EventFeedback,

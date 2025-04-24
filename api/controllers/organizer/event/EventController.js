@@ -3,6 +3,9 @@ const { HTTP_STATUS_CODES } = require("../../../config/constant");
 const { VALIDATION_RULES } = require("../../../config/validationRules");
 const VALIDATOR = require("validatorjs");
 
+const { Sequelize, where } = require("sequelize");
+const sequelize = require("../../../config/db");
+
 module.exports = {
   createEvent: async (req, res) => {
     try {
@@ -40,14 +43,14 @@ module.exports = {
           "date",
           "time",
           "capacity",
-          "organizerId",
+          "organiserId",
           "category",
         ],
       });
 
       if (existingEvent) {
-        return res.status(HTTP_STATUS_CODES.CONFLICT).json({
-          status: HTTP_STATUS_CODES.CONFLICT,
+        return res.status(HTTP_STATUS_CODES.BAD_REQUESTESTESTEST).json({
+          status: HTTP_STATUS_CODES.BAD_REQUESTESTEST,
           message: "Event with the same title and date already exists.",
           data: "",
           error: "Event already exists",
@@ -61,10 +64,10 @@ module.exports = {
         date,
         time,
         capacity,
-        organizerId: req.admin.id,
+        organiserId: req.organizer.id,
         category,
-        createdBy: req.admin.id,
-        updatedBy: req.admin.id,
+        createdBy: req.organizer.id,
+        updatedBy: req.organizer.id,
       });
 
       const event = {
@@ -75,7 +78,7 @@ module.exports = {
         date,
         time,
         capacity,
-        organizerId: req.admin.id,
+        organiserId: req.organizer.id,
         category,
       };
 
@@ -97,51 +100,105 @@ module.exports = {
   },
   getAllEvents: async (req, res) => {
     try {
+      const organizerId = req.organizer.id;
+
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
       const offset = (page - 1) * limit;
+      const replacements = { limit, offset, organizerId };
 
-      const { count, rows: events } = await Event.findAndCountAll({
-        limit,
-        offset,
-        order: [
-          ["date", "ASC"],
-          ["time", "ASC"],
-        ],
+      let whereClause = `WHERE e.is_deleted = false AND e.organiser_id = :organizerId`;
+      let paginationClause = `LIMIT :limit OFFSET :offset`;
+
+      const rawQuery = `
+        SELECT
+          e.id,
+          e.title,
+          e.description,
+          e.location,
+          e.date,
+          e.time,
+          e.available_seats AS capacity,
+          e.category
+        FROM event AS e
+        ${whereClause}
+        ORDER BY e.date ASC, e.time ASC
+        ${paginationClause};
+      `;
+
+      const events = await sequelize.query(rawQuery, {
+        replacements,
+        type: Sequelize.QueryTypes.SELECT,
       });
+
+      const countQuery = `
+        SELECT COUNT(id) AS total
+        FROM event e
+        ${whereClause}
+        ${paginationClause};
+      `;
+
+      const countResult = await sequelize.query(countQuery, {
+        replacements,
+        type: Sequelize.QueryTypes.SELECT,
+      });
+
+      const totalRecords = parseInt(countResult[0].total);
+      const totalPages = Math.ceil(totalRecords / limit);
+
+      if (!events || events.length === 0) {
+        return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({
+          status: HTTP_STATUS_CODES.NOT_FOUND,
+          message: "No events found for this organizer.",
+          data: [],
+          error: "NO_EVENTS_FOUND",
+        });
+      }
 
       return res.status(HTTP_STATUS_CODES.OK).json({
-        success: true,
-        statusCode: HTTP_STATUS_CODES.OK,
-        message: "Events fetched successfully",
+        status: HTTP_STATUS_CODES.OK,
+        message: "Events fetched successfully.",
         data: {
           events,
-          pagination: {
-            total: count,
-            page,
-            limit,
-            totalPages: Math.ceil(count / limit),
-          },
+          totalRecords,
         },
-        error: "",
+        error: null,
       });
     } catch (error) {
-      console.error("Fetch Events Error:", error);
+      console.error("Error fetching events:", error.message);
       return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        statusCode: HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR,
-        message: "Failed to fetch events",
-        data: null,
-        error: error.message || "Internal server error",
+        status: HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR,
+        message: "Failed to fetch events.",
+        data: [],
+        error: error.message || "INTERNAL_SERVER_ERROR",
       });
     }
   },
-
+  //get all event under this organiser
   getEventById: async (req, res) => {
     try {
-      const { id } = req.params;
+      const id = req.query.id;
+      const organizerId = req.organizer.id;
 
-      const event = await Event.findByPk(id);
+      const query = `
+        SELECT
+          e.id,
+          e.title,
+          e.description,
+          e.location,
+          e.date,
+          e.time,
+          e.available_seats AS capacity,
+          e.category
+        FROM event AS e
+        WHERE e.id = :eventId AND e.organiser_id = :organizerId AND e.is_deleted = false
+        LIMIT 1;
+      `;
+
+      const [event] = await sequelize.query(query, {
+        replacements: { eventId: id, organizerId },
+        type: Sequelize.QueryTypes.SELECT,
+      });
 
       if (!event) {
         return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({
@@ -149,7 +206,8 @@ module.exports = {
           statusCode: HTTP_STATUS_CODES.NOT_FOUND,
           message: "Event not found",
           data: null,
-          error: "Event with the given ID does not exist",
+          error:
+            "Event with the given ID does not exist or does not belong to this organizer",
         });
       }
 
@@ -171,12 +229,17 @@ module.exports = {
       });
     }
   },
-
   updateEvent: async (req, res) => {
     try {
-      const { id } = req.params.id;
+      const id = req.query.id;
+      console.log("id: ", id);
 
-      const event = await Event.findByPk(id);
+      const event = await Event.findOne({
+        where: {
+          id: id,
+        },
+        attributes: ["id"],
+      });
 
       if (!event) {
         return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({
@@ -190,16 +253,17 @@ module.exports = {
 
       const updatedData = {};
 
-      if (req.body.title) updatedData.title = req.body.title;
+      if (req.body.title) {
+        updatedData.title = req.body.title;
+      }
       if (req.body.description) updatedData.description = req.body.description;
       if (req.body.date) updatedData.date = req.body.date;
       if (req.body.location) updatedData.location = req.body.location;
       if (req.body.capacity) updatedData.capacity = req.body.capacity;
 
-      updatedData.updatedBy = req.user.id;
-
       // Only update the event if there are fields to be updated
       if (Object.keys(updatedData).length > 0) {
+        updatedData.updatedBy = req.organizer.id;
         await event.update(updatedData);
       }
 
@@ -207,7 +271,7 @@ module.exports = {
         success: true,
         statusCode: HTTP_STATUS_CODES.OK,
         message: "Event updated successfully",
-        data: event,
+        data: updatedData,
         error: "",
       });
     } catch (error) {
@@ -224,14 +288,19 @@ module.exports = {
 
   deleteEvent: async (req, res) => {
     try {
-      const { id } = req.params.id;
+      const eventId = req.query.id;
 
-      const event = await Event.findByPk(id);
+      const event = await Event.findOne({
+        where: {
+          id: eventId,
+        },
+        attributes: ["id"],
+      });
       if (!event) {
         return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({
           status: HTTP_STATUS_CODES.NOT_FOUND,
           message: "Event not found",
-          data: null,
+          data: "",
           error: "No event with the provided ID",
         });
       }

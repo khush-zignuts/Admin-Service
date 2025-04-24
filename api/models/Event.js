@@ -35,12 +35,12 @@ const Event = sequelize.define(
       allowNull: false,
       field: "available_seats",
     },
-    organizerId: {
+    organiserId: {
       type: DataTypes.UUID, // adminId
       allowNull: false,
-      field: "organizer_id",
+      field: "organiser_id",
       references: {
-        model: "admin",
+        model: "organizer",
         key: "id",
       },
     },

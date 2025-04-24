@@ -20,12 +20,12 @@ const Chat = sequelize.define(
         key: "id",
       },
     },
-    adminId: {
+    organizerId: {
       type: DataTypes.UUID,
       allowNull: false,
-      field: "admin_id", //  event organizer/admin
+      field: "organizer_id", //  event organiser
       references: {
-        model: "admin",
+        model: "organizer",
         key: "id",
       },
     },

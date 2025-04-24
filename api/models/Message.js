@@ -1,6 +1,7 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/db");
 const CommonFields = require("./CommanFields");
+const { messaging } = require("firebase-admin");
 const Message = sequelize.define(
   "Message",
   {
@@ -43,11 +44,6 @@ const Message = sequelize.define(
         key: "id",
       },
     },
-    status: {
-      type: DataTypes.ENUM("booked", "cancelled"),
-      defaultValue: "booked",
-    },
-
     deliveredAt: {
       type: DataTypes.DATE,
       allowNull: true,

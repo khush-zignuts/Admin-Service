@@ -2,8 +2,8 @@ const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/db");
 const { CommonFields, commonOptions } = require("./CommanFields");
 
-const Admin = sequelize.define(
-  "Admin",
+const Organizer = sequelize.define(
+  "Organizer",
   {
     id: {
       type: DataTypes.UUID,
@@ -15,7 +15,6 @@ const Admin = sequelize.define(
       type: DataTypes.STRING(30),
       allowNull: false,
     },
-
     email: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -24,18 +23,32 @@ const Admin = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    phoneNumber: {
+      type: DataTypes.STRING(15),
+      allowNull: true,
+      field: "phone_number",
+    },
     accessToken: {
       type: DataTypes.TEXT,
       field: "access_token",
       allowNull: true,
     },
+    otp: {
+      type: DataTypes.STRING(6),
+      allowNull: true,
+    },
+    otpCreatedAt: {
+      type: DataTypes.BIGINT,
+      allowNull: true,
+      field: "otp_created_at",
+    },
     ...CommonFields,
   },
   {
-    tableName: "admin",
+    tableName: "organizer",
     freezeTableName: true,
     ...commonOptions,
   }
 );
 
-module.exports = Admin;
+module.exports = Organizer;

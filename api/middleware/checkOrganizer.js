@@ -1,16 +1,16 @@
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
-const { Admin } = require("../models/index");
+const { Organizer } = require("../models/index");
 const { HTTP_STATUS_CODES } = require("../../config/constant");
 
-const checkAdmin = async (req, res, next) => {
+const checkOrganizer = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.json({
         status: HTTP_STATUS_CODES.UNAUTHORIZED,
-        message: "Unauthorized access. Token missing or malformed.",
+        message: "Unauthorized access. Token missing .",
         data: "",
         error: "",
       });
@@ -29,21 +29,21 @@ const checkAdmin = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.SECRET_KEY);
 
-    const admin = await Admin.findOne({
+    const organizer = await Organizer.findOne({
       where: { id: decoded.id },
       attributes: ["id", "accessToken"],
     });
 
-    if (!admin) {
+    if (!organizer) {
       return res.json({
         status: HTTP_STATUS_CODES.UNAUTHORIZED,
-        message: "Admin not found.",
+        message: "Organizer not found.",
         data: "",
         error: "",
       });
     }
 
-    if (admin.accessToken !== token) {
+    if (organizer.accessToken !== token) {
       return res.json({
         status: HTTP_STATUS_CODES.UNAUTHORIZED,
         message: "Invalid or expired token.",
@@ -52,10 +52,10 @@ const checkAdmin = async (req, res, next) => {
       });
     }
 
-    // Set admin on request object
-    req.admin = admin;
+    // Set organizer on request object
+    req.organizer = organizer;
 
-    next(); // Proceed if admin
+    next(); // Proceed if organizer
   } catch (error) {
     return res.json({
       status: HTTP_STATUS_CODES.UNAUTHORIZED,
@@ -66,4 +66,4 @@ const checkAdmin = async (req, res, next) => {
   }
 };
 
-module.exports = checkAdmin;
+module.exports = checkOrganizer;

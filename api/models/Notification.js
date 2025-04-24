@@ -26,10 +26,6 @@ const Notification = sequelize.define(
       type: DataTypes.TEXT,
       allowNull: false,
     },
-    isRead: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
-    },
     type: {
       type: DataTypes.ENUM("event", "announcement", "reminder"),
       defaultValue: "event",
