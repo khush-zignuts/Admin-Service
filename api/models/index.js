@@ -4,7 +4,6 @@ const Chat = require("./Chat");
 const EmailQueue = require("./Emailqueue");
 const Event = require("./Event");
 const EventFeedback = require("./EventFeedback");
-const EventReminder = require("./EventReminder");
 const Message = require("./Message");
 const User = require("./User");
 const Notification = require("./Notification");
@@ -18,66 +17,56 @@ const Organizer = require("./Organizer");
 // EmailQueue.sync({ force: true, alter: true });
 // Event.sync({ force: true, alter: true });
 // EventFeedback.sync({ force: true, alter: true });
-// EventReminder.sync({ force: true, alter: true });
 // Message.sync({ force: true, alter: true });
-// // User.sync({ force: true, alter: true });
+// User.sync({ force: true, alter: true });
 // Notification.sync({ force: true, alter: true });
+// Organizer.sync({ force: true, alter: true });
+
+//organizer
+//organizer and Chat associations
+Organizer.hasMany(Chat, { foreignKey: "organizerId", onDelete: "CASCADE" });
+Chat.belongsTo(Organizer, { foreignKey: "organizerId" });
 
 // Event belongs to Organizer
 Organizer.hasMany(Event, { foreignKey: "organizerId", onDelete: "CASCADE" });
 Event.belongsTo(Organizer, { foreignKey: "organizerId" });
 
-// User and Booking
-User.hasMany(Booking, { foreignKey: "userId", onDelete: "CASCADE" });
-Booking.belongsTo(User, { foreignKey: "userId" });
-
-// Admin and Booking
-Admin.hasMany(Booking, { foreignKey: "organiserId", onDelete: "CASCADE" });
-Booking.belongsTo(Admin, { foreignKey: "organiserId" });
+//event
 
 // Event and Booking
 Event.hasMany(Booking, { foreignKey: "eventId", onDelete: "CASCADE" });
 Booking.belongsTo(Event, { foreignKey: "eventId" });
 
-// Chat associations
-Organizer.hasMany(Chat, { foreignKey: "organizerId", onDelete: "CASCADE" });
-Chat.belongsTo(Organizer, { foreignKey: "organizerId" });
+//event and  eventfreedback
+Event.hasMany(EventFeedback, { foreignKey: "eventId", onDelete: "CASCADE" });
+EventFeedback.belongsTo(Event, { foreignKey: "eventId" });
 
-Admin.hasMany(Chat, { foreignKey: "adminId", onDelete: "CASCADE" });
-Chat.belongsTo(Admin, { foreignKey: "adminId" });
+// Event - Notification
+Event.hasMany(Notification, { foreignKey: "eventId" });
+Notification.belongsTo(Event, { foreignKey: "eventId" });
 
-Event.hasMany(Chat, { foreignKey: "eventId", onDelete: "CASCADE" });
-Chat.belongsTo(Event, { foreignKey: "eventId" });
+//User
 
-// Message associations
-Chat.hasMany(Message, { foreignKey: "chatId", onDelete: "CASCADE" });
-Message.belongsTo(Chat, { foreignKey: "chatId" });
+// User and Booking
+User.hasMany(Booking, { foreignKey: "userId", onDelete: "CASCADE" });
+Booking.belongsTo(User, { foreignKey: "userId" });
 
-// User.hasMany(Message, { foreignKey: "senderId", onDelete: "CASCADE" });
-// User.hasMany(Message, { foreignKey: "receiverId", onDelete: "CASCADE" });
-// Message.belongsTo(User, { foreignKey: "senderId", as: "Sender" });
-// Message.belongsTo(User, { foreignKey: "receiverId", as: "Receiver" });
+//user and chat
+User.hasMany(Chat, { foreignKey: "userId", onDelete: "CASCADE" });
+Chat.belongsTo(User, { foreignKey: "userId" });
 
-Event.hasMany(Message, { foreignKey: "eventId", onDelete: "CASCADE" });
-Message.belongsTo(Event, { foreignKey: "eventId" });
+//User and  Notification
+User.hasMany(Notification, { foreignKey: "userId", onDelete: "CASCADE" });
+Notification.belongsTo(User, { foreignKey: "userId" });
 
 // EventFeedback
 User.hasMany(EventFeedback, { foreignKey: "userId", onDelete: "CASCADE" });
 EventFeedback.belongsTo(User, { foreignKey: "userId" });
 
-Event.hasMany(EventFeedback, { foreignKey: "eventId", onDelete: "CASCADE" });
-EventFeedback.belongsTo(Event, { foreignKey: "eventId" });
-
-// EventReminder
-User.hasMany(EventReminder, { foreignKey: "userId", onDelete: "CASCADE" });
-EventReminder.belongsTo(User, { foreignKey: "userId" });
-
-Event.hasMany(EventReminder, { foreignKey: "eventId", onDelete: "CASCADE" });
-EventReminder.belongsTo(Event, { foreignKey: "eventId" });
-
-// Notification
-User.hasMany(Notification, { foreignKey: "userId", onDelete: "CASCADE" });
-Notification.belongsTo(User, { foreignKey: "userId" });
+//chat
+// Message associations
+Chat.hasMany(Message, { foreignKey: "chatId", onDelete: "CASCADE" });
+Message.belongsTo(Chat, { foreignKey: "chatId" });
 
 // ================= EXPORT ALL MODELS =================
 
@@ -91,6 +80,5 @@ module.exports = {
   Admin,
   EmailQueue,
   EventFeedback,
-  EventReminder,
   Notification,
 };

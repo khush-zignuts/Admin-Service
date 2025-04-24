@@ -1,9 +1,9 @@
-const { HTTP_STATUS_CODES } = require("../../../config/constant");
+const { HTTP_STATUS_CODES } = require("../../../../config/constant");
 const { Sequelize, Op } = require("sequelize");
-const sequelize = require("../../../config/db");
+const sequelize = require("../../../../config/db");
 const { Organizer } = require("../../../models/index");
-const sendEmail = require("../../helper/sendEmail");
-const { sendMessage } = require("../../helper/sendNotification");
+const sendEmail = require("../../../helper/sendEmail");
+const { sendMessage } = require("../../../helper/sendNotification");
 
 module.exports = {
   getAllOrganizer: async (req, res) => {
@@ -76,11 +76,11 @@ module.exports = {
       });
     } catch (error) {
       console.error("Error fetching events:", error.message);
-      return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-        status: HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR,
+      return res.status(HTTP_STATUS_CODES.SERVER_ERROR).json({
+        status: HTTP_STATUS_CODES.SERVER_ERROR,
         message: "Failed to fetch organizer.",
         data: "",
-        error: error.message || "INTERNAL_SERVER_ERROR",
+        error: error.message || "SERVER_ERROR",
       });
     }
   },
@@ -141,11 +141,11 @@ module.exports = {
       });
     } catch (error) {
       console.error("Error deactivating organizer:", error.message);
-      return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-        status: HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR,
+      return res.status(HTTP_STATUS_CODES.SERVER_ERROR).json({
+        status: HTTP_STATUS_CODES.SERVER_ERROR,
         message: "Failed to deactivate organizer.",
         data: "",
-        error: error.message || "INTERNAL_SERVER_ERROR",
+        error: error.message || "SERVER_ERROR",
       });
     }
   },

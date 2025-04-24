@@ -18,6 +18,15 @@ const Notification = sequelize.define(
         key: "id",
       },
     },
+    eventId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      field: "event_id",
+      references: {
+        model: "event",
+        key: "id",
+      },
+    },
     title: {
       type: DataTypes.STRING,
       allowNull: false,

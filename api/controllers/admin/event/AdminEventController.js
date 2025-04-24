@@ -1,7 +1,7 @@
-const { Event } = require("../../models/index");
-const { HTTP_STATUS_CODES } = require("../../../config/constant");
+const { Event } = require("../../../models/index");
+const { HTTP_STATUS_CODES } = require("../../../../config/constant");
 const { Sequelize, Op } = require("sequelize");
-const sequelize = require("../../../config/db");
+const sequelize = require("../../../../config/db");
 
 module.exports = {
   getAllEvents: async (req, res) => {
@@ -74,11 +74,11 @@ module.exports = {
       });
     } catch (error) {
       console.error("Error fetching events:", error.message);
-      return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-        status: HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR,
+      return res.status(HTTP_STATUS_CODES.SERVER_ERROR).json({
+        status: HTTP_STATUS_CODES.SERVER_ERROR,
         message: "Failed to fetch event(s).",
         data: "",
-        error: error.message || "INTERNAL_SERVER_ERROR",
+        error: error.message || "SERVER_ERROR",
       });
     }
   },

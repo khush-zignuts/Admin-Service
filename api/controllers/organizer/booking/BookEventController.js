@@ -1,9 +1,9 @@
-const { HTTP_STATUS_CODES } = require("../../../config/constant");
+const { HTTP_STATUS_CODES } = require("../../../../config/constant");
 const { Sequelize, Op } = require("sequelize");
-const sequelize = require("../../../config/db");
-const { Event, Booking, User, Notification } = require("../../models/index");
-const sendEmail = require("../../helper/sendEmail");
-const { sendMessage } = require("../../helper/sendNotification");
+const sequelize = require("../../../../config/db");
+const { Event, Booking, User, Notification } = require("../../../models/index");
+const sendEmail = require("../../../helper/sendEmail");
+const { sendMessage } = require("../../../helper/sendNotification");
 
 module.exports = {
   getAllPendingRequest: async (req, res) => {
@@ -63,15 +63,15 @@ module.exports = {
           requests: pendingRequests,
           totalRecords,
         },
-        error: null,
+        error: "",
       });
     } catch (error) {
       console.error("Error fetching pending requests:", error.message);
-      return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-        status: HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR,
+      return res.status(HTTP_STATUS_CODES.SERVER_ERROR).json({
+        status: HTTP_STATUS_CODES.SERVER_ERROR,
         message: "Failed to fetch pending requests.",
         data: [],
-        error: error.message || "INTERNAL_SERVER_ERROR",
+        error: error.message || "SERVER_ERROR",
       });
     }
   },
@@ -86,17 +86,19 @@ module.exports = {
           eventId,
           status: "booked",
         },
-        attributes: ["id"],
+        attributes: ["id", "status"],
       });
+      console.log("booked: ", booked);
 
       if (booked) {
-        return res.status(HTTP_STATUS_CODES.BAD_REQUESTEST).json({
-          status: HTTP_STATUS_CODES.BAD_REQUESTEST,
+        return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
+          status: HTTP_STATUS_CODES.BAD_REQUEST,
           message: "This user has already booked the event.",
-          data: [],
+          data: "",
           error: "BOOKING_ALREADY_EXISTS",
         });
       }
+      console.log("first");
 
       // Update booking status
       await Booking.update(
@@ -114,7 +116,7 @@ module.exports = {
         where: {
           id: eventId,
         },
-        attributes: ["id"],
+        attributes: ["id", "title", "date", "time"],
       });
       console.log("event: ", event);
 
@@ -127,27 +129,9 @@ module.exports = {
         });
       }
 
-      // // save userIds in event Model
-      // const currentUserIds = event.userIds || [];
-
-      // // Check if userId already exists in the array
-      // if (!currentUserIds.includes(userId)) {
-      //   currentUserIds.push(userId);
-
-      //   // Use .update() to update the userIds field
-      //   await Event.update(
-      //     { userIds: currentUserIds },
-      //     {
-      //       where: { id: event.id },
-      //     }
-      //   );
-      // }
-
-      // Find the user email using userId
       const user = await User.findOne({
-        where: {
-          id: userId,
-        },attributes: ["id"],
+        where: { id: userId, isDeleted: false },
+        attributes: ["id", "name", "email"],
       });
 
       if (!user) {
@@ -170,7 +154,7 @@ module.exports = {
       await sendEmail(
         user.email,
         "You have been accepted for the event!",
-        "../assets/templates/event-acceptance-email.handlebars",
+        "../../assets/templates/event-acceptance-email.handlebars",
         emailTemplateData
       );
 
@@ -195,6 +179,7 @@ module.exports = {
       // Save in Notification model
       await Notification.create({
         userId: userId,
+        eventId: eventId,
         title: title,
         message: body,
         type: "event", // from ENUM
@@ -203,16 +188,16 @@ module.exports = {
       return res.status(HTTP_STATUS_CODES.OK).json({
         status: HTTP_STATUS_CODES.OK,
         message: "User accepted, added to event, and email sent.",
-        data: [event.userIds],
+        data: "",
         error: "",
       });
     } catch (error) {
       console.error("Error accepting user for event:", error.message);
-      return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-        status: HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR,
+      return res.status(HTTP_STATUS_CODES.SERVER_ERROR).json({
+        status: HTTP_STATUS_CODES.SERVER_ERROR,
         message: "Failed to accept user for event.",
         data: [],
-        error: error.message || "INTERNAL_SERVER_ERROR",
+        error: error || "SERVER_ERROR",
       });
     }
   },
@@ -235,7 +220,8 @@ module.exports = {
       const event = await Event.findOne({
         where: {
           id: eventId,
-        },attributes: ["id"],
+        },
+        attributes: ["id"],
       });
       console.log("event: ", event);
 
@@ -251,7 +237,8 @@ module.exports = {
       const user = await User.findOne({
         where: {
           id: userId,
-        },attributes: ["id"],
+        },
+        attributes: ["id"],
       });
 
       if (!user) {
@@ -274,7 +261,7 @@ module.exports = {
       await sendEmail(
         user.email,
         "Unfortunately, you have been declined for the event.",
-        "../assets/templates/event-decline-email.handlebars",
+        "../../assets/templates/event-decline-email.handlebars",
         emailTemplateData
       );
 
@@ -304,11 +291,11 @@ module.exports = {
       });
     } catch (error) {
       console.error("Error declining user for event:", error.message);
-      return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-        status: HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR,
+      return res.status(HTTP_STATUS_CODES.SERVER_ERROR).json({
+        status: HTTP_STATUS_CODES.SERVER_ERROR,
         message: "Failed to decline user for event.",
         data: [],
-        error: error.message || "INTERNAL_SERVER_ERROR",
+        error: error.message || "SERVER_ERROR",
       });
     }
   },

@@ -46,7 +46,7 @@ module.exports = {
         return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({
           status: HTTP_STATUS_CODES.NOT_FOUND,
           message: "User not found",
-          data: null,
+          data: "",
           error: "USER_NOT_FOUND",
         });
       }
@@ -77,11 +77,11 @@ module.exports = {
       });
     } catch (error) {
       console.error("Error fetching users:", error.message);
-      return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-        status: HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR,
+      return res.status(HTTP_STATUS_CODES.SERVER_ERROR).json({
+        status: HTTP_STATUS_CODES.SERVER_ERROR,
         message: "Failed to fetch users.",
-        data: null,
-        error: error.message || "INTERNAL_SERVER_ERROR",
+        data: "",
+        error: error.message || "SERVER_ERROR",
       });
     }
   },

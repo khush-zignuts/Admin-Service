@@ -6,6 +6,6 @@ const router = express.Router();
 //auth User
 router
   .post("/login", AdminAuthController.login)
-  .post("/logout", checkAdmin, AdminAuthController.logout);
+  .post("/logOut", checkAdmin, AdminAuthController.logout);
 
 module.exports = router;

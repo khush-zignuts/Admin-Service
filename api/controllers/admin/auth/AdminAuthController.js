@@ -82,8 +82,8 @@ module.exports = {
       const adminId = req.admin.id;
 
       const admin = await Admin.findOne({
-        where: { id: adminId, isDeleted: false , isActive: true},
-     
+        where: { id: adminId, isDeleted: false, isActive: true },
+
         attributes: ["id", "name", "accessToken"],
       });
 
@@ -108,10 +108,12 @@ module.exports = {
         {
           accessToken: null,
           updatedAt: Math.floor(Date.now() / 1000),
-          updatedBy: userId,
+          updatedBy: adminId,
         },
         { where: { id: adminId, isDeleted: false } }
       );
+
+      console.log("first");
       return res.json({
         status: HTTP_STATUS_CODES.OK,
         message: "logout",

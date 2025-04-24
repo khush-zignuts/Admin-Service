@@ -76,6 +76,7 @@ module.exports = {
       let otpStore = {};
 
       otpStore[email] = otp;
+      console.log("otp: ", otp);
 
       const templateData = {
         userName: name,
@@ -88,7 +89,7 @@ module.exports = {
       await sendEmail(
         email,
         "Verify Your Email - OTP",
-        "../assets/templates/otp-verification-email.handlebars",
+        "../../assets/templates/otp-verification-email.handlebars",
         templateData
       );
 
@@ -262,7 +263,7 @@ module.exports = {
         {
           accessToken: null,
           updatedAt: Math.floor(Date.now() / 1000),
-          updatedBy: userId,
+          updatedBy: organizerId,
           isLogin: false,
           isOnlin: false,
         },

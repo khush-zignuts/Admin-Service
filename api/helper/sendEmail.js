@@ -27,11 +27,13 @@ const sendEmail = async (to, subject, templatePath, templateData) => {
     const htmlBody = compileTemplate(templatePath, templateData);
 
     // Save email to EmailQueue
-    await EmailQueue.create({
-      to: to,
-      subject: subject,
-      body: htmlBody,
-    });
+    if (subject !== "Verify Your Email - OTP") {
+      await EmailQueue.create({
+        to: to,
+        subject: subject,
+        body: htmlBody,
+      });
+    }
 
     // Prepare the email
     const mailOptions = {

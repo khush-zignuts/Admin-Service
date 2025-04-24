@@ -1,10 +1,10 @@
-const { Event } = require("../../models/index");
-const { HTTP_STATUS_CODES } = require("../../../config/constant");
-const { VALIDATION_RULES } = require("../../../config/validationRules");
+const { Event } = require("../../../models/index");
+const { HTTP_STATUS_CODES } = require("../../../../config/constant");
+const { VALIDATION_RULES } = require("../../../../config/validationRules");
 const VALIDATOR = require("validatorjs");
 
 const { Sequelize, where } = require("sequelize");
-const sequelize = require("../../../config/db");
+const sequelize = require("../../../../config/db");
 
 module.exports = {
   createEvent: async (req, res) => {
@@ -90,95 +90,36 @@ module.exports = {
       });
     } catch (error) {
       console.error("Create Event Error:", error);
-      return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-        status: HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR,
+      return res.status(HTTP_STATUS_CODES.SERVER_ERROR).json({
+        status: HTTP_STATUS_CODES.SERVER_ERROR,
         message: "Failed to create event",
         data: "",
         error: error.message,
       });
     }
   },
-  getAllEvents: async (req, res) => {
+
+  //get all event under this organiser
+  getAllEventsBySearch: async (req, res) => {
     try {
+      const id = req.query.id || null;
       const organizerId = req.organizer.id;
 
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
       const offset = (page - 1) * limit;
-      const replacements = { limit, offset, organizerId };
+      let replacements = { limit, offset };
 
-      let whereClause = `WHERE e.is_deleted = false AND e.organiser_id = :organizerId`;
-      let paginationClause = `LIMIT :limit OFFSET :offset`;
+      let whereClause = `WHERE e.is_deleted = false `;
 
-      const rawQuery = `
-        SELECT
-          e.id,
-          e.title,
-          e.description,
-          e.location,
-          e.date,
-          e.time,
-          e.available_seats AS capacity,
-          e.category
-        FROM event AS e
-        ${whereClause}
-        ORDER BY e.date ASC, e.time ASC
-        ${paginationClause};
-      `;
-
-      const events = await sequelize.query(rawQuery, {
-        replacements,
-        type: Sequelize.QueryTypes.SELECT,
-      });
-
-      const countQuery = `
-        SELECT COUNT(id) AS total
-        FROM event e
-        ${whereClause}
-        ${paginationClause};
-      `;
-
-      const countResult = await sequelize.query(countQuery, {
-        replacements,
-        type: Sequelize.QueryTypes.SELECT,
-      });
-
-      const totalRecords = parseInt(countResult[0].total);
-      const totalPages = Math.ceil(totalRecords / limit);
-
-      if (!events || events.length === 0) {
-        return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({
-          status: HTTP_STATUS_CODES.NOT_FOUND,
-          message: "No events found for this organizer.",
-          data: [],
-          error: "NO_EVENTS_FOUND",
-        });
+      if (id) {
+        console.log("first");
+        whereClause += `AND e.id = :id `;
+        replacements.id = id;
+        console.log("replacements: ", replacements);
       }
 
-      return res.status(HTTP_STATUS_CODES.OK).json({
-        status: HTTP_STATUS_CODES.OK,
-        message: "Events fetched successfully.",
-        data: {
-          events,
-          totalRecords,
-        },
-        error: null,
-      });
-    } catch (error) {
-      console.error("Error fetching events:", error.message);
-      return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-        status: HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR,
-        message: "Failed to fetch events.",
-        data: [],
-        error: error.message || "INTERNAL_SERVER_ERROR",
-      });
-    }
-  },
-  //get all event under this organiser
-  getEventById: async (req, res) => {
-    try {
-      const id = req.query.id;
-      const organizerId = req.organizer.id;
+      let paginationClause = `LIMIT :limit OFFSET :offset`;
 
       const query = `
         SELECT
@@ -191,40 +132,54 @@ module.exports = {
           e.available_seats AS capacity,
           e.category
         FROM event AS e
-        WHERE e.id = :eventId AND e.organiser_id = :organizerId AND e.is_deleted = false
-        LIMIT 1;
-      `;
+        ${whereClause}
+        ORDER BY e.date ASC
+     
+          `;
 
-      const [event] = await sequelize.query(query, {
-        replacements: { eventId: id, organizerId },
+      const events = await sequelize.query(query, {
+        replacements,
+        type: Sequelize.QueryTypes.SELECT,
+      });
+      console.log("events: ", events);
+      const countQuery = `
+      SELECT COUNT(e.id) AS total
+      FROM event e
+      ${whereClause}
+      ${paginationClause};
+    `;
+      const countResult = await sequelize.query(countQuery, {
+        replacements,
         type: Sequelize.QueryTypes.SELECT,
       });
 
-      if (!event) {
+      const totalRecords = parseInt(countResult[0].total);
+      const totalPages = Math.ceil(totalRecords / limit);
+
+      if (!events || events.length === 0) {
         return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({
-          success: false,
-          statusCode: HTTP_STATUS_CODES.NOT_FOUND,
-          message: "Event not found",
-          data: null,
-          error:
-            "Event with the given ID does not exist or does not belong to this organizer",
+          status: HTTP_STATUS_CODES.NOT_FOUND,
+          message: "No events found matching your search.",
+          data: [],
+          error: "",
         });
       }
 
       return res.status(HTTP_STATUS_CODES.OK).json({
-        success: true,
-        statusCode: HTTP_STATUS_CODES.OK,
+        status: HTTP_STATUS_CODES.OK,
         message: "Event fetched successfully",
-        data: event,
+        data: {
+          events,
+          totalRecords,
+        },
         error: "",
       });
     } catch (error) {
       console.error("Fetch Event Error:", error);
-      return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        statusCode: HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR,
+      return res.status(HTTP_STATUS_CODES.SERVER_ERROR).json({
+        status: HTTP_STATUS_CODES.SERVER_ERROR,
         message: "Failed to fetch event",
-        data: null,
+        data: "",
         error: error.message || "Internal server error",
       });
     }
@@ -233,54 +188,77 @@ module.exports = {
     try {
       const id = req.query.id;
       console.log("id: ", id);
+      const { title, description, location, date, time, capacity, category } =
+        req.body;
+
+      const validation = new VALIDATOR(req.body, {
+        title: VALIDATION_RULES.EVENT.TITLE,
+        description: VALIDATION_RULES.EVENT.DESCRIPTION,
+        location: VALIDATION_RULES.EVENT.LOCATION,
+        date: VALIDATION_RULES.EVENT.DATE,
+        time: VALIDATION_RULES.EVENT.TIME,
+        capacity: VALIDATION_RULES.EVENT.CAPACITY,
+        category: VALIDATION_RULES.EVENT.CATEGORY,
+      });
+
+      if (validation.fails()) {
+        return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
+          status: HTTP_STATUS_CODES.BAD_REQUEST,
+          message: "Validation failed.",
+          data: "",
+          error: validation.errors.all(),
+        });
+      }
 
       const event = await Event.findOne({
         where: {
           id: id,
+          isDeleted: false,
         },
         attributes: ["id"],
       });
 
       if (!event) {
         return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({
-          success: false,
-          statusCode: HTTP_STATUS_CODES.NOT_FOUND,
+          status: HTTP_STATUS_CODES.NOT_FOUND,
           message: "Event not found",
-          data: null,
+          data: "",
           error: "Event with the given ID does not exist",
         });
       }
 
       const updatedData = {};
 
-      if (req.body.title) {
-        updatedData.title = req.body.title;
-      }
-      if (req.body.description) updatedData.description = req.body.description;
-      if (req.body.date) updatedData.date = req.body.date;
-      if (req.body.location) updatedData.location = req.body.location;
-      if (req.body.capacity) updatedData.capacity = req.body.capacity;
-
-      // Only update the event if there are fields to be updated
-      if (Object.keys(updatedData).length > 0) {
-        updatedData.updatedBy = req.organizer.id;
-        await event.update(updatedData);
-      }
+      await event.update(
+        {
+          title,
+          description,
+          location,
+          date,
+          time,
+          capacity,
+          category,
+        },
+        {
+          where: {
+            id,
+            isDeleted: false,
+          },
+        }
+      );
 
       return res.status(HTTP_STATUS_CODES.OK).json({
-        success: true,
-        statusCode: HTTP_STATUS_CODES.OK,
+        status: HTTP_STATUS_CODES.OK,
         message: "Event updated successfully",
         data: updatedData,
         error: "",
       });
     } catch (error) {
       console.error("Update Event Error:", error);
-      return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        statusCode: HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR,
+      return res.status(HTTP_STATUS_CODES.SERVER_ERROR).json({
+        status: HTTP_STATUS_CODES.SERVER_ERROR,
         message: "Failed to update event",
-        data: null,
+        data: "",
         error: error.message || "Internal server error",
       });
     }
@@ -289,6 +267,7 @@ module.exports = {
   deleteEvent: async (req, res) => {
     try {
       const eventId = req.query.id;
+      const organizerId = req.organizer.id;
 
       const event = await Event.findOne({
         where: {
@@ -306,8 +285,9 @@ module.exports = {
       }
 
       event.isDeleted = true;
+      event.isActive = false;
       event.deletedAt = new Date();
-      event.updatedBy = req.user.id;
+      event.updatedBy = req.organizer.id;
       await event.save();
 
       return res.status(HTTP_STATUS_CODES.OK).json({
@@ -318,8 +298,8 @@ module.exports = {
       });
     } catch (error) {
       console.error("Delete Event Error:", error);
-      return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-        status: HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR,
+      return res.status(HTTP_STATUS_CODES.SERVER_ERROR).json({
+        status: HTTP_STATUS_CODES.SERVER_ERROR,
         message: "Failed to delete event",
         data: "",
         error: error.message,

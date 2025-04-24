@@ -12,6 +12,10 @@ const EmailQueue = sequelize.define(
     to: {
       type: DataTypes.STRING,
       allowNull: false,
+      references: {
+        model: "user",
+        key: "email",
+      },
     },
     subject: {
       type: DataTypes.STRING,

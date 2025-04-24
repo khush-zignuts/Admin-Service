@@ -8,7 +8,7 @@ const checkOrganizer = async (req, res, next) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.json({
+      return res.status(HTTP_STATUS_CODES.UNAUTHORIZED).json({
         status: HTTP_STATUS_CODES.UNAUTHORIZED,
         message: "Unauthorized access. Token missing .",
         data: "",
@@ -19,7 +19,7 @@ const checkOrganizer = async (req, res, next) => {
     const token = authHeader.split(" ")[1];
 
     if (!token) {
-      return res.json({
+      return res.status(HTTP_STATUS_CODES.UNAUTHORIZED).json({
         status: HTTP_STATUS_CODES.UNAUTHORIZED,
         message: "Access denied. No token provided.",
         data: "",
@@ -35,8 +35,8 @@ const checkOrganizer = async (req, res, next) => {
     });
 
     if (!organizer) {
-      return res.json({
-        status: HTTP_STATUS_CODES.UNAUTHORIZED,
+      return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({
+        status: HTTP_STATUS_CODES.NOT_FOUND,
         message: "Organizer not found.",
         data: "",
         error: "",
@@ -44,7 +44,7 @@ const checkOrganizer = async (req, res, next) => {
     }
 
     if (organizer.accessToken !== token) {
-      return res.json({
+      return res.status(HTTP_STATUS_CODES.UNAUTHORIZED).json({
         status: HTTP_STATUS_CODES.UNAUTHORIZED,
         message: "Invalid or expired token.",
         data: "",
@@ -57,7 +57,7 @@ const checkOrganizer = async (req, res, next) => {
 
     next(); // Proceed if organizer
   } catch (error) {
-    return res.json({
+    return res.status(HTTP_STATUS_CODES.UNAUTHORIZED).json({
       status: HTTP_STATUS_CODES.UNAUTHORIZED,
       message: "Unauthorized access.",
       data: "",

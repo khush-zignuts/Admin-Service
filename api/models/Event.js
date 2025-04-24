@@ -26,9 +26,15 @@ const Event = sequelize.define(
       type: DataTypes.DATE,
       allowNull: false,
     },
-    time: {
-      type: DataTypes.STRING,
+    startTime: {
+      type: DataTypes.TIME,
       allowNull: false,
+      field: "start_time",
+    },
+    endTime: {
+      type: DataTypes.TIME,
+      allowNull: false,
+      field: "end_time",
     },
     capacity: {
       type: DataTypes.INTEGER, // 100 limit

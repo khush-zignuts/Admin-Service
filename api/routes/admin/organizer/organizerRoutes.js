@@ -5,16 +5,18 @@ const router = express.Router();
 const {
   AdminOrganizerController,
 } = require("../../../controllers/admin/index");
-const checkAdmin = require("../../middleware/Admin/checkAdmin");
+const checkAdmin = require("../../../middleware/checkAdmin");
 
-router .post(
-  "/deactivateorganizer",
-  checkAdmin,
-  AdminOrganizerController.deactivateOrganizer
-).post(
-  "/getallorganizer",
-  checkAdmin,
-  AdminOrganizerController.getAllOrganizer
-);
+router
+  .post(
+    "/deactivateOrganizer",
+    checkAdmin,
+    AdminOrganizerController.deactivateOrganizer
+  )
+  .get(
+    "/getAllOrganizer",
+    checkAdmin,
+    AdminOrganizerController.getAllOrganizer
+  );
 
 module.exports = router;

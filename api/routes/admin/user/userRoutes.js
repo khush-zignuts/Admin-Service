@@ -2,11 +2,9 @@ require("dotenv").config();
 const express = require("express");
 const router = express.Router();
 
-const {
-  AdminAuthController,
-} = require("../../../controllers/admin/auth/AdminAuthController");
-const checkAdmin = require("../../middleware/Admin/checkAdmin");
+const { AdminUserController } = require("../../../controllers/admin/index");
+const checkAdmin = require("../../../middleware/checkAdmin");
 
-router.post("/deactivateuser", checkAdmin, deactivateUser);
+router.get("/getallusers", checkAdmin, AdminUserController.getAllUsers);
 
 module.exports = router;
