@@ -23,9 +23,9 @@ const Organizer = require("./Organizer");
 // // User.sync({ force: true, alter: true });
 // Notification.sync({ force: true, alter: true });
 
-// Admin and Event
-Admin.hasMany(Event, { foreignKey: "organiserId", onDelete: "CASCADE" });
-Event.belongsTo(Admin, { foreignKey: "organiserId" });
+// Event belongs to Organizer
+Organizer.hasMany(Event, { foreignKey: "organizerId", onDelete: "CASCADE" });
+Event.belongsTo(Organizer, { foreignKey: "organizerId" });
 
 // User and Booking
 User.hasMany(Booking, { foreignKey: "userId", onDelete: "CASCADE" });
@@ -40,8 +40,8 @@ Event.hasMany(Booking, { foreignKey: "eventId", onDelete: "CASCADE" });
 Booking.belongsTo(Event, { foreignKey: "eventId" });
 
 // Chat associations
-User.hasMany(Chat, { foreignKey: "userId", onDelete: "CASCADE" });
-Chat.belongsTo(User, { foreignKey: "userId" });
+Organizer.hasMany(Chat, { foreignKey: "organizerId", onDelete: "CASCADE" });
+Chat.belongsTo(Organizer, { foreignKey: "organizerId" });
 
 Admin.hasMany(Chat, { foreignKey: "adminId", onDelete: "CASCADE" });
 Chat.belongsTo(Admin, { foreignKey: "adminId" });
