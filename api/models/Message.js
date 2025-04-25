@@ -1,6 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/db");
-const CommonFields = require("./CommanFields");
+const { CommonFields, commonOptions } = require("./CommanFields");
 const { messaging } = require("firebase-admin");
 const Message = sequelize.define(
   "Message",
@@ -13,7 +13,6 @@ const Message = sequelize.define(
     },
     chatId: {
       type: DataTypes.UUID,
-
       allowNull: false,
       field: "chat_id",
       references: {
@@ -49,11 +48,12 @@ const Message = sequelize.define(
       allowNull: true,
       field: "delivered_at",
     },
+    ...CommonFields,
   },
   {
     tableName: "message",
     freezeTableName: true,
-    timestamps: true,
+    ...commonOptions,
   }
 );
 

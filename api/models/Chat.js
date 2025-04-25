@@ -1,6 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/db");
-const CommonFields = require("./CommanFields");
+const { CommonFields, commonOptions } = require("./CommanFields");
 
 const Chat = sequelize.define(
   "Chat",
@@ -43,11 +43,12 @@ const Chat = sequelize.define(
       type: DataTypes.TEXT,
       allowNull: true,
     },
+    ...CommonFields,
   },
   {
     tableName: "chat",
     freezeTableName: true,
-    timestamps: true,
+    ...commonOptions,
   }
 );
 

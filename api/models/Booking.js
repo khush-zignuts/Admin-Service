@@ -1,6 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/db");
-const CommonFields = require("./CommanFields");
+const { CommonFields, commonOptions } = require("./CommanFields");
 
 const Booking = sequelize.define(
   "Booking",
@@ -20,10 +20,10 @@ const Booking = sequelize.define(
         key: "id",
       },
     },
-    organiserId: {
+    organizerId: {
       type: DataTypes.UUID,
       allowNull: false,
-      field: "organiser_id",
+      field: "organizer_id",
       references: {
         model: "organizer",
         key: "id",
@@ -42,11 +42,12 @@ const Booking = sequelize.define(
       type: DataTypes.ENUM("pending", "booked", "cancelled"),
       defaultValue: "pending",
     },
+    ...CommonFields,
   },
   {
     tableName: "booking",
     freezeTableName: true,
-    timestamps: true,
+    ...commonOptions,
   }
 );
 

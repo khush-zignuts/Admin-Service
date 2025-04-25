@@ -33,15 +33,19 @@ module.exports = {
       DESCRIPTION: "required|string|min:10",
       LOCATION: "required|string|min:2|max:100",
       DATE: "required|date",
-      TIME: "required|string|min:3|max:20",
+      START_TIME: "required|string",
+      END_TIME: "required|string",
       CAPACITY: "required|integer|min:1|max:10000",
-      ORGANISER_ID: "required|string|uuid",
+      ORGANIzER_ID: "required|string|uuid",
       CATEGORY: "required|string|min:3|max:50",
     },
 
+    date_format: {
+      TIME: "required|date_format:H:i",
+    },
     BOOKING: {
       USER_ID: "required|string|uuid",
-      ORGANISER_ID: "required|string|uuid",
+      ORGANISzER_ID: "required|string|uuid",
       EVENT_ID: "required|string|uuid",
       STATUS: "string|in:pending,booked,cancelled",
     },

@@ -29,7 +29,8 @@ getAllEventsBySearch: async (req, res) => {
           e.description,
           e.location,
           e.date,
-          e.time,
+          e.startTime,
+        e.endTime,
           e."available_seats" AS capacity,
           e.category
         FROM event AS e

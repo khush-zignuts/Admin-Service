@@ -1,7 +1,14 @@
 const { HTTP_STATUS_CODES } = require("../../../../config/constant");
 const { Sequelize, Op } = require("sequelize");
 const sequelize = require("../../../../config/db");
-const { Event, Booking, User, Notification } = require("../../../models/index");
+const {
+  Event,
+  Booking,
+  User,
+  Notification,
+  Organizer,
+} = require("../../../models/index");
+const { formatDate } = require("../../../helper/formattedDate");
 const sendEmail = require("../../../helper/sendEmail");
 const { sendMessage } = require("../../../helper/sendNotification");
 
@@ -16,7 +23,7 @@ module.exports = {
       const replacements = { organizerId, limit, offset };
 
       const whereClause = `
-        WHERE b.organiser_id = :organizerId AND b.status = 'pending'
+        WHERE b.organizer_id = :organizerId AND b.status = 'pending'
       `;
       const paginationClause = `LIMIT :limit OFFSET :offset`;
 
@@ -32,7 +39,7 @@ module.exports = {
         INNER JOIN "user" AS u ON u.id = b.user_id
         INNER JOIN event AS e ON e.id = b.event_id
         ${whereClause}
-        ORDER BY e.date ASC, e.time ASC
+        ORDER BY e.date ASC, e.start_time ASC
         ${paginationClause};
       `;
 
@@ -78,7 +85,10 @@ module.exports = {
 
   acceptUserForEvent: async (req, res) => {
     try {
+      console.log("first");
       const { userId, eventId, fcmToken } = req.body;
+      // const organizerId = req.organizer.id;
+      console.log("req.body: ", req.body);
 
       const booked = await Booking.findOne({
         where: {
@@ -116,7 +126,15 @@ module.exports = {
         where: {
           id: eventId,
         },
-        attributes: ["id", "title", "date", "time"],
+        attributes: [
+          "id",
+          "title",
+          "date",
+          "startTime",
+          "organizerId",
+          "endTime",
+          "location",
+        ],
       });
       console.log("event: ", event);
 
@@ -129,26 +147,46 @@ module.exports = {
         });
       }
 
+      const organizer = await Organizer.findOne({
+        where: { id: event.organizerId, isDeleted: false },
+        attributes: ["id", "name", "email"],
+      });
+
+      if (!organizer) {
+        return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({
+          status: HTTP_STATUS_CODES.NOT_FOUND,
+          message: "Organizer not found.",
+          data: "",
+          error: "",
+        });
+      }
+
       const user = await User.findOne({
         where: { id: userId, isDeleted: false },
-        attributes: ["id", "name", "email"],
+        attributes: ["id", "name", "email", "phoneNumber"],
       });
 
       if (!user) {
         return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({
           status: HTTP_STATUS_CODES.NOT_FOUND,
           message: "User not found.",
-          data: [],
-          error: "USER_NOT_FOUND",
+          data: "",
+          error: "",
         });
       }
+
+      // Format the event date
+      const formattedDate = formatDate(event.date);
 
       //  Send the email using Handlebars template
       const emailTemplateData = {
         userName: user.name,
         eventTitle: event.title,
-        eventDate: event.date,
-        eventTime: event.time,
+        eventDate: formattedDate,
+        eventStartTime: event.startTime,
+        organizerName: organizer.name,
+        eventVenue: event.location,
+        userPhone: user.phoneNumber,
       };
 
       await sendEmail(
@@ -160,7 +198,11 @@ module.exports = {
 
       // Create and send push notification
       const title = ` Congratulations, ${user.name}!`;
-      const body = `You've been accepted for the event: ${event.title} on ${event.date} at ${event.time}`;
+      const body = `You've been accepted for the event: ${event.title} on ${event.date} at ${event.time}.  
+                    If you have any questions, 
+                    feel free to reach out to the organizer, 
+                    ${organizer.name}, via the chat button provided.
+`;
 
       const message = {
         token: fcmToken,
@@ -234,6 +276,20 @@ module.exports = {
         });
       }
 
+      const organizer = await Organizer.findOne({
+        where: { id: event.organizerId, isDeleted: false },
+        attributes: ["id", "name", "email"],
+      });
+
+      if (!organizer) {
+        return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({
+          status: HTTP_STATUS_CODES.NOT_FOUND,
+          message: "Organizer not found.",
+          data: "",
+          error: "",
+        });
+      }
+
       const user = await User.findOne({
         where: {
           id: userId,
@@ -256,6 +312,8 @@ module.exports = {
         eventTitle: event.title,
         eventDate: event.date,
         eventTime: event.time,
+        organizerName: organizer.name,
+        organizerPhonenumber: organizer.phoneNumber,
       };
 
       await sendEmail(
@@ -267,7 +325,12 @@ module.exports = {
 
       // Create and send push notification for decline
       const title = `We're sorry, ${user.name}.`;
-      const body = `Unfortunately, you have been declined for the event: ${event.title} on ${event.date} at ${event.time}`;
+      const body = `Unfortunately, you have been declined for the event: 
+                    ${event.title} on ${event.date} at ${event.time}
+                   If you have any questions, 
+                    feel free to reach out to the organizer, 
+                    ${organizer.name}, via the chat button provided.
+`;
 
       const message = {
         token: fcmToken,

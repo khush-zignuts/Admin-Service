@@ -1,5 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/db");
+const { CommonFields, commonOptions } = require("./CommanFields");
 
 const Notification = sequelize.define(
   "Notification",
@@ -39,11 +40,12 @@ const Notification = sequelize.define(
       type: DataTypes.ENUM("event", "announcement", "reminder"),
       defaultValue: "event",
     },
+    ...CommonFields,
   },
   {
     tableName: "notification",
     freezeTableName: true,
-    timestamps: true,
+    ...commonOptions,
   }
 );
 

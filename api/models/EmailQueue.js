@@ -1,6 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/db");
-const CommonFields = require("./CommanFields");
+const { CommonFields, commonOptions } = require("./CommanFields");
 const EmailQueue = sequelize.define(
   "EmailQueue",
   {
@@ -29,11 +29,12 @@ const EmailQueue = sequelize.define(
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
+    ...CommonFields,
   },
   {
     tableName: "emailqueue",
     freezeTableName: true,
-    timestamps: true,
+    ...commonOptions,
   }
 );
 

@@ -27,7 +27,8 @@ module.exports = {
         e.id,
         e.title,
         e.date,
-        e.time
+        e.start_time,
+        e.end_time
       FROM event AS e
       ${whereClause}
       ORDER BY e.date ASC, e.time ASC 

@@ -105,7 +105,7 @@ module.exports = {
       SELECT COUNT(id) AS count
       FROM event AS e
       WHERE e.organizer_id = :organizerId
-        AND (e.time > NOW() OR (e.date = NOW() AND e.time > NOW()))
+        AND (e.start_time > NOW() OR (e.date = NOW() AND e.start_time > NOW()))
         AND e.is_deleted = false
         AND e.is_active = true
 

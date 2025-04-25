@@ -7,71 +7,98 @@
   <title>Event Decline</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f2f3f7;
       color: #333;
       margin: 0;
       padding: 0;
     }
     .email-container {
-      background-color: #ffffff;
-      padding: 20px;
-      border-radius: 5px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
       width: 100%;
       max-width: 600px;
-      margin: 0 auto;
+      margin: 40px auto;
     }
     h1 {
-      color: #c0392b;
+      color: #e74c3c;
+      font-size: 22px;
     }
     p {
       font-size: 16px;
-      line-height: 1.5;
+      line-height: 1.6;
     }
     .event-details {
       margin-top: 20px;
-      padding: 10px;
-      background-color: #f9f9f9;
-      border-radius: 5px;
+      padding: 15px;
+      background-color: #fdfdfd;
+      border-left: 4px solid #e74c3c;
+      border-radius: 8px;
+    }
+    .event-details p {
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #333;
     }
     .event-details ul {
       list-style: none;
       padding: 0;
+      margin: 0;
     }
     .event-details li {
-      font-size: 14px;
-      margin-bottom: 5px;
+      font-size: 15px;
+      margin-bottom: 8px;
+    }
+    .contact-organizer {
+      margin-top: 20px;
+      padding: 12px 15px;
+      background-color: #fff3f3;
+      border-left: 4px solid #e74c3c;
+      border-radius: 6px;
+      font-size: 15px;
     }
     .footer {
-      font-size: 12px;
+      font-size: 13px;
       text-align: center;
-      color: #aaa;
-      margin-top: 20px;
+      color: #888;
+      margin-top: 30px;
     }
   </style>
 </head>
 <body>
   <div class="email-container">
     <h1>Hi {{userName}},</h1>
-    <p>We regret to inform you that you have not been selected to participate in the event <strong>{{eventTitle}}</strong>.</p>
+    <p>
+      We regret to inform you that you have not been selected to participate in the event
+      <strong>{{eventTitle}}</strong>.
+    </p>
 
     <div class="event-details">
-      <p>Event details:</p>
+      <p>📅 Event Details:</p>
       <ul>
         <li><strong>Event Name:</strong> {{eventTitle}}</li>
         <li><strong>Date:</strong> {{eventDate}}</li>
-        <li><strong>Time:</strong> {{eventTime}}</li>
+        <li><strong>Strat Time:</strong> {{eventStartTime}}</li>
+        <li><strong>Organizer:</strong> {{organizerName}}</li>
       </ul>
     </div>
 
-    <p>We truly appreciate your interest and encourage you to stay connected for future opportunities.</p>
+   <div class="contact-organizer">
+  If you have any questions, feel free to reach out to the organizer <strong>{{organizerName}}</strong> using the chat button provided in the event portal.
+</div>
 
-    <p>Best regards,<br />Event Management Team</p>
+
+    <p>
+      We truly appreciate your interest and encourage you to stay connected for future opportunities.
+    </p>
+
+    <p>Best regards,<br />The Event Management Team</p>
   </div>
 
-  <div class="footer">
-    <p>If you have any questions, feel free to contact us at support@eventmanagement.com</p>
+    <div class="footer">
+    <p>The Event Management Team</p>
   </div>
 </body>
 </html>

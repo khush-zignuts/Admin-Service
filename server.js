@@ -1,5 +1,11 @@
 require("dotenv").config();
 const express = require("express");
+
+const app = express();
+const server = require("http").createServer(app);
+
+const { socketSetup } = require("./config/socketIo");
+const bodyParser = require("body-parser");
 const cors = require("cors"); // <-- Import cors
 const sequelize = require("./config/db");
 const adminBootstrap = require("./config/bootstrap");
@@ -7,7 +13,7 @@ const adminBootstrap = require("./config/bootstrap");
 require("./config/firebase");
 const apiRoutes = require("./api/routes/index");
 
-const app = express();
+//socketIo
 
 app.use(
   cors({
@@ -19,6 +25,8 @@ app.use(
 //middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use(cors());
+app.use(bodyParser.json());
 
 (async () => {
   try {
@@ -34,9 +42,10 @@ app.use("/api", apiRoutes);
 
 const PORT = process.env.PORT;
 
-app.listen(PORT, async () => {
+server.listen(PORT, async () => {
   try {
-    await sequelize.sync({ alter: true });
+    socketSetup(server);
+    // await sequelize.sync({ force: true });
     console.log(`Server is running on port ${PORT}`);
   } catch (error) {
     console.log(error.message);

@@ -9,8 +9,18 @@ const sequelize = require("../../../../config/db");
 module.exports = {
   createEvent: async (req, res) => {
     try {
-      const { title, description, location, date, time, capacity, category } =
-        req.body;
+      const {
+        title,
+        description,
+        location,
+        date,
+        startTime,
+        endTime,
+        capacity,
+        category,
+      } = req.body;
+      const organizerId = req.organizer.id;
+      console.log("organizerId: ", organizerId);
       console.log("req.body: ", req.body);
 
       const validation = new VALIDATOR(req.body, {
@@ -18,7 +28,8 @@ module.exports = {
         description: VALIDATION_RULES.EVENT.DESCRIPTION,
         location: VALIDATION_RULES.EVENT.LOCATION,
         date: VALIDATION_RULES.EVENT.DATE,
-        time: VALIDATION_RULES.EVENT.TIME,
+        startTime: VALIDATION_RULES.EVENT.START_TIME,
+        endTime: VALIDATION_RULES.EVENT.END_TIME,
         capacity: VALIDATION_RULES.EVENT.CAPACITY,
         category: VALIDATION_RULES.EVENT.CATEGORY,
       });
@@ -41,13 +52,15 @@ module.exports = {
           "description",
           "location",
           "date",
-          "time",
+          "startTime",
+          "endTime",
           "capacity",
-          "organiserId",
+          "organizerId",
           "category",
         ],
       });
 
+      console.log("existingEvent: ", existingEvent);
       if (existingEvent) {
         return res.status(HTTP_STATUS_CODES.BAD_REQUESTESTESTEST).json({
           status: HTTP_STATUS_CODES.BAD_REQUESTESTEST,
@@ -62,9 +75,10 @@ module.exports = {
         description,
         location,
         date,
-        time,
+        startTime,
+        endTime,
         capacity,
-        organiserId: req.organizer.id,
+        organizerId: req.organizer.id,
         category,
         createdBy: req.organizer.id,
         updatedBy: req.organizer.id,
@@ -76,9 +90,10 @@ module.exports = {
         description,
         location,
         date,
-        time,
+        startTime,
+        endTime,
         capacity,
-        organiserId: req.organizer.id,
+        organizerId: req.organizer.id,
         category,
       };
 
@@ -114,7 +129,7 @@ module.exports = {
 
       if (id) {
         console.log("first");
-        whereClause += `AND e.id = :id `;
+        whereClause += `\n AND e.id = :id `;
         replacements.id = id;
         console.log("replacements: ", replacements);
       }
@@ -128,7 +143,8 @@ module.exports = {
           e.description,
           e.location,
           e.date,
-          e.time,
+          e.start_time,
+          e.end_time,
           e.available_seats AS capacity,
           e.category
         FROM event AS e
@@ -188,15 +204,24 @@ module.exports = {
     try {
       const id = req.query.id;
       console.log("id: ", id);
-      const { title, description, location, date, time, capacity, category } =
-        req.body;
+      const {
+        title,
+        description,
+        location,
+        date,
+        startTime,
+        endTime,
+        capacity,
+        category,
+      } = req.body;
 
       const validation = new VALIDATOR(req.body, {
         title: VALIDATION_RULES.EVENT.TITLE,
         description: VALIDATION_RULES.EVENT.DESCRIPTION,
         location: VALIDATION_RULES.EVENT.LOCATION,
         date: VALIDATION_RULES.EVENT.DATE,
-        time: VALIDATION_RULES.EVENT.TIME,
+        startTime: VALIDATION_RULES.EVENT.START_TIME,
+        endTime: VALIDATION_RULES.EVENT.END_TIME,
         capacity: VALIDATION_RULES.EVENT.CAPACITY,
         category: VALIDATION_RULES.EVENT.CATEGORY,
       });
@@ -235,7 +260,8 @@ module.exports = {
           description,
           location,
           date,
-          time,
+          startTime,
+          endTime,
           capacity,
           category,
         },

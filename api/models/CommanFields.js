@@ -32,7 +32,6 @@ const CommonFields = {
     field: "updated_by",
     allowNull: true,
   },
-
   deletedAt: {
     type: DataTypes.DATE,
     field: "deleted_at",

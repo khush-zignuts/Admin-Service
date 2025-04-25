@@ -1,6 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/db");
-const CommonFields = require("./CommanFields");
+const { CommonFields, commonOptions } = require("./CommanFields");
 const EventFeedback = sequelize.define(
   "EventFeedback",
   {
@@ -36,11 +36,12 @@ const EventFeedback = sequelize.define(
       type: DataTypes.TEXT,
       allowNull: true,
     },
+    ...CommonFields,
   },
   {
     tableName: "eventfeedback",
     freezeTableName: true,
-    timestamps: true,
+    ...commonOptions,
   }
 );
 
