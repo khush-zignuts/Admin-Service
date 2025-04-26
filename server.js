@@ -1,5 +1,6 @@
 require("dotenv").config();
 const express = require("express");
+const path = require("path");
 
 const app = express();
 const server = require("http").createServer(app);
@@ -21,6 +22,10 @@ app.use(
     credentials: true,
   })
 );
+
+//for internal html :
+app.use(express.static(path.join(__dirname, "api", "public")));
+
 
 //middleware
 app.use(express.urlencoded({ extended: true }));

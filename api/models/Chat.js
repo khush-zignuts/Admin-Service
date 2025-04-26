@@ -39,10 +39,6 @@ const Chat = sequelize.define(
         key: "id",
       },
     },
-    lastMessage: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-    },
     ...CommonFields,
   },
   {

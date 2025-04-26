@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Real-Time Chat</title>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f4f4f4;
+            font-family: Arial, sans-serif;
+        }
+
+        .chat-container {
+            width: 400px;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .main-box {
+            display: flex;
+            flex-direction: column;
+            height: 500px;
+        }
+
+        .chat-header {
+            background-color: #007bff;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .chat-box {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            background-color: #f9f9f9;
+        }
+
+        .chat-box div {
+            margin-bottom: 10px;
+            padding: 8px;
+            background-color: #e1f5fe;
+            border-radius: 5px;
+            max-width: 80%;
+        }
+
+        .input-area {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #ccc;
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .input-area button {
+            margin-left: 10px;
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .input-area button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="chat-container">
+        <div class="main-box">
+            <div class="chat-header">
+                <h2 id="chatWith"></h2>
+
+            </div>
+            <div class="chat-box" id="chatBox"></div>
+            <div class="input-area">
+                <input type="text" id="messageInput" placeholder="Type a message..." />
+                <button id="sendMessageBtn">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <script>
+        const socket = io('http://localhost:5001');
+
+        // data to be sent when registering
+        const data = {
+            userId: "eff7c3ed-fa15-428f-840a-b8984ccd193b",
+            eventId: "a1c0e173-aa3e-4361-99c9-39302105c2a1",
+        };
+
+        let organizerId;
+        let organizerName;
+        let userName;
+        let userId = data.userId;
+        let eventId = data.eventId;
+        let senderChatId;
+
+
+        // Send registration data once connected
+        socket.on("connect", () => {
+            socket.emit("registered", data);
+        });
+
+        // Listen for registration confirmation
+        socket.on("registered", (data) => {
+
+            alert(data.message);
+
+            userName = data.userName,
+                organizerName = data.organizerName;
+            organizerId = data.organizerId,
+
+                console.log('organizerId: ', organizerId);
+            console.log('organizerName: ', organizerName);
+
+            document.getElementById("chatWith").textContent = `Chat with ${organizerName}`;
+
+            openChatBox();
+        });
+
+
+        async function openChatBox() {
+            try {
+                console.log("first")
+                console.log('organizerId: ', organizerId);
+                const data = await axios.post("http://localhost:5001/api/organizer/chat/getOrCreateChatId", {
+                    user1Id: userId,
+                    user2Id: organizerId,
+                    eventId: eventId,
+                });
+
+                console.log('data:', data);
+
+                 senderChatId = data.data.data;
+                console.log('senderChatId: ', senderChatId);
+
+            } catch (error) {
+                console.error("Failed to get or create chat:", error);
+                alert("Unable to start chat with user.");
+                return;
+            }
+
+
+            const chatBox = document.getElementById("chatBox");
+            
+            document.getElementById("messageInput").value = '';
+            document.getElementById("sendMessageBtn").onclick = () => sendMessage();
+
+            // await loadMessages(currentSenderChatId);
+            document.getElementById("chatBox").scrollTop = document.getElementById("chatBox").scrollHeight;
+        }
+
+        socket.on("message", (data) => {
+            const chatBox = document.getElementById("chatBox");
+
+            if (data.senderId === userId && data.receiverId === organizerId
+                || data.senderId === organizerId && data.receiverId === userId
+            ) {
+                const messageDiv = document.createElement("div");
+                messageDiv.textContent = `${data.senderId === userId ? "you" : `${organizerId}`}: ${data.message}`;
+                chatBox.appendChild(messageDiv);
+            }
+        });
+
+
+
+
+        // Function to send the message (for demo purposes)
+        async function sendMessage() {
+            const message = messageInput.value;
+
+            if (message.trim() !== '') {
+            
+                const messagePayload = {
+                    chatId: senderChatId,
+                    senderId: userId,
+                    receiverId:organizerId,
+                    eventId: eventId,
+                    message: message
+                };
+
+                socket.emit('sendMessage', messagePayload);
+
+
+                try {
+                    const response = await fetch("http://localhost:5001/api/organizer/message/saveMessage", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'},
+                        body: JSON.stringify(messagePayload)
+                    });
+
+                    const data = await response.json();
+                    console.log('data: ', data);
+
+                    if (!response.ok) {
+                        console.error("API error:", data.message || data.error);
+                    }
+                } catch (error) {
+                    console.error("Failed to send message to server:", error);
+                }
+
+                // Optionally, display the message in the chat box immediately
+                // const messageDiv = document.createElement('div');
+                // messageDiv.textContent = `you: ${message}`;
+                // chatBox.appendChild(messageDiv);
+
+                // Clear the input field
+                messageInput.value = '';
+            }
+        }
+
+
+        // async function fetchLoginUser() {
+        //     try {
+        //         const res = await axios.get("http://localhost:5000/api/action/getLoginUser", {
+        //             headers: {
+        //                 "Content-Type": "application/json",
+        //                 Authorization: `Bearer ${token}`
+        //             }
+        //         });
+
+        //         const user = res.data.data;
+        //         const userId = user.id;
+        //         const userName = user.name;
+
+        //         if (user.status && user?.name) {
+        //             loggedInUserId = userId;
+        //             loggedInUserName = userName;
+        //             socket.emit("register", user);
+        //             document.getElementById("loggedInUser").textContent = user.name;
+        //         }
+        //         console.log('loggedInUserName: ', loggedInUserName);
+        //         console.log('loggedInUserId: ', loggedInUserId);
+        //     } catch (err) {
+        //         console.error("Error fetching logged-in user:", err.message);
+        //         document.getElementById("loggedInUser").textContent = "Error fetching user";
+        //     }
+        // }
+
+        // window.onload = function () {
+        //     fetchLoginUser();
+        //     fetchorganizer();
+        // };
+
+
+        // //left bottom khush login name:
+        // async function fetchLoginUser() {
+        //     try {
+        //         const res = await axios.get("http://localhost:5000/api/action/getLoginUser", {
+        //             headers: {
+        //                 "Content-Type": "application/json",
+        //                 Authorization: `Bearer ${token}`
+        //             }
+        //         });
+
+        //         const user = res.data.data;
+        //         const userId = user.id;
+        //         const userName = user.name;
+
+        //         if (user.status && user?.name) {
+        //             loggedInUserId = userId;
+        //             loggedInUserName = userName;
+        //             socket.emit("register", user);
+        //             document.getElementById("loggedInUser").textContent = user.name;
+        //         }
+        //         console.log('loggedInUserName: ', loggedInUserName);
+        //         console.log('loggedInUserId: ', loggedInUserId);
+        //     } catch (err) {
+        //         console.error("Error fetching logged-in user:", err.message);
+        //         document.getElementById("loggedInUser").textContent = "Error fetching user";
+        //     }
+        // }
+
+        // function handleLogout() {
+        //     window.location.href = "/logout.html";
+        // }
+
+        // //left side all contact names - except khush
+        // // Fetch users list
+        // async function fetchUsers() {
+        //     try {
+        //         const res = await axios.get("http://localhost:5000/api/action/getUser", {
+
+        //             headers: {
+        //                 "Content-Type": "application/json",
+        //                 Authorization: `Bearer ${token}`
+        //             },
+        //         });
+        //         const data = res.data;
+
+        //         if (data.status && data.data) {
+        //             const userList = document.getElementById("userList");
+        //             userList.innerHTML = "";
+
+        //             data.data.forEach(user => {
+        //                 const li = document.createElement("li");
+
+        //                 li.textContent = user.name;
+
+        //                 // Add click event listener to open chat box
+        //                 li.addEventListener('click', () => openChatBox(user));
+
+        //                 userList.appendChild(li);
+        //             });
+        //         }
+        //     } catch (err) {
+        //         console.error("Error fetching users:", err);
+        //     }
+        // }
+
+        // //right side main box
+
+        // //   open the chat box for a specific user on the right side
+
+        // let currentReceiverId = null;
+        // let currentReceiverName = null;
+        // let currentSenderChatId = null;
+        // let currentReceiverChatId = null;
+        // let chatId = null;
+
+        // let earliestMessageTime = null;
+
+        // async function loadMessages(currentSenderChatId, beforeTime = null) {
+        //     try {
+        //         const params = {
+        //             limit: 20,
+        //         };
+
+        //         // if (beforeTime) {
+        //         //     params.before = beforeTime;
+        //         // }
+
+        //         const response = await axios.get(`http://localhost:5000/api/message/get/${currentSenderChatId}`, {
+        //             headers: {
+        //                 'Authorization': `Bearer ${token}`
+        //             },
+        //             params: params
+        //         });
+
+        //         const result = response.data;
+        //         console.log('result: ', result);
+
+        //         if (result.status && result.data.length) {
+        //             const messages = result.data;
+        //             const chatBox = document.getElementById("chatBox");
+
+        //             const previousScrollHeight = chatBox.scrollHeight;
+
+        //             messages.forEach((msg) => {
+        //                 const div = document.createElement("div");
+        //                 div.textContent = `${msg.senderId === loggedInUserId ? "you" : currentReceiverName}: ${msg.content}`;
+        //                 chatBox.prepend(div);
+        //             });
+
+        //             earliestMessageTime = messages[0].createdAt;
+
+        //             // maintain scroll position after prepending
+        //             chatBox.scrollTop = chatBox.scrollHeight - previousScrollHeight;
+        //         }
+
+        //     } catch (err) {
+        //         console.error("Error loading messages:", err);
+        //     }
+        // }
+
+
+        // window.onload = function () {
+        //     fetchLoginUser();
+        //     fetchUsers();
+        // };
+
+        // document.getElementById("chatBox").addEventListener("scroll", () => {
+        //     const chatBox = document.getElementById("chatBox");
+
+        //     if (chatBox.scrollTop === 0 && earliestMessageTime && currentSenderChatId) {
+        //         loadMessages(currentSenderChatId, earliestMessageTime);
+        //     }
+        // });
+
+
+    </script>
+</body>
+
+</html>
