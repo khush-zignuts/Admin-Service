@@ -4,30 +4,29 @@ const { HTTP_STATUS_CODES } = require("../../../../config/constant");
 
 // POST /api/chats/get-or-create
 const getorcreate = async (req, res) => {
-
-  const { user1Id, user2Id ,eventId} = req.body;
-  console.log('req.body: ', req.body);
- 
+  const { user1Id, user2Id, eventId } = req.body;
+  console.log("req.body: ", req.body);
 
   try {
+    console.log("first");
     let chat = await Chat.findOne({
       where: {
-        userId: user1Id,
-        organizerId: user2Id,
+        userId: user2Id,
+        organizerId: user1Id,
         eventId: eventId,
       },
     });
-    
+
     // console.log('chat: ', chat);
     if (!chat) {
       chat = await Chat.create({
-        userId: user1Id,
-        organizerId: user2Id,
+        userId: user2Id,
+        organizerId: user1Id,
         eventId: eventId,
         createdBy: user1Id,
       });
-      
-      console.log('chat: ', chat);
+
+      console.log("chat: ", chat);
       console.log("Chat created successfully.");
       return res.status(HTTP_STATUS_CODES.CREATED).json({
         status: HTTP_STATUS_CODES.CREATED,
@@ -37,7 +36,7 @@ const getorcreate = async (req, res) => {
       });
     } else {
       console.log("Chat fetched successfully.");
-      console.log('chat: ', chat.id);
+      console.log("chat: ", chat.id);
 
       return res.status(HTTP_STATUS_CODES.OK).json({
         status: HTTP_STATUS_CODES.OK,

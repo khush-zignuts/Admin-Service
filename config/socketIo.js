@@ -14,6 +14,12 @@ const socketSetup = (server) => {
   io.on("connection", (socket) => {
     console.log("A user connected:", socket.id);
 
+    // socket.on("userRegistered", (data) => {
+    //   const { userId } = data;
+    //   users[userId] = socket.id;
+    //   console.log("Organizer registered:", users);
+    // });
+
     // registration event
     socket.on("registered", async (data) => {
       const { userId, eventId } = data;
@@ -41,20 +47,21 @@ const socketSetup = (server) => {
       const organizerName = organizer.name;
 
       // Store user and organizer socket mappings
-      users[userId] = socket.id;
       users[organizerId] = socket.id;
+      console.log("users: ", users);
 
       socket.emit("registered", {
-        organizerId : organizerId,
-        organizerName :organizerName,
-        userName:userName,
+        organizerId: organizerId,
+        organizerName: organizerName,
+        userName: userName,
         message: `${user.name} has connected with socket ID ${socket.id}`,
       });
     });
 
     // Handle sending messages
     socket.on("sendMessage", (data) => {
-      const { chatId, senderId, receiverId,eventId, message } = data;
+      const { chatId, senderId, receiverId, eventId, message } = data;
+      console.log("data: ", data);
       const messagePayload = {
         chatId,
         senderId,
@@ -68,9 +75,9 @@ const socketSetup = (server) => {
         io.to(users[receiverId]).emit("message", messagePayload);
       }
 
-      // if (users[senderId]) {
-      //   io.to(users[senderId]).emit("message", messagePayload);
-      // }
+      if (users[senderId]) {
+        io.to(users[senderId]).emit("message", messagePayload);
+      }
     });
 
     // Handle disconnection

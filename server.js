@@ -18,14 +18,16 @@ const apiRoutes = require("./api/routes/index");
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: "*",
+    // origin: ["http://localhost:5173", , "http://127.0.0.1:5501"],
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })
 );
 
 //for internal html :
 app.use(express.static(path.join(__dirname, "api", "public")));
-
 
 //middleware
 app.use(express.urlencoded({ extended: true }));

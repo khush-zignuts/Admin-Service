@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Real-Time Chat</title>
+    <title>Server Side Chat</title>
     <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
     <style>
         * {
@@ -113,8 +113,8 @@
 
         // data to be sent when registering
         const data = {
-            userId: "eff7c3ed-fa15-428f-840a-b8984ccd193b",
-            eventId: "a1c0e173-aa3e-4361-99c9-39302105c2a1",
+            userId: "683c262e-b7fa-46b0-8471-1981714e3c15",
+            eventId: "283589a3-ec80-4176-947a-fb17168b537b",
         };
 
         let organizerId;
@@ -142,7 +142,10 @@
                 console.log('organizerId: ', organizerId);
             console.log('organizerName: ', organizerName);
 
-            document.getElementById("chatWith").textContent = `Chat with ${organizerName}`;
+            // Organizer frontend (e.g., admin panel)
+            // socket.emit("userRegistered", { userId });
+
+            document.getElementById("chatWith").textContent = `Chat with ${userName}`;
 
             openChatBox();
         });
@@ -153,14 +156,14 @@
                 console.log("first")
                 console.log('organizerId: ', organizerId);
                 const data = await axios.post("http://localhost:5001/api/organizer/chat/getOrCreateChatId", {
-                    user1Id: userId,
-                    user2Id: organizerId,
+                    user1Id: organizerId,
+                    user2Id: userId,
                     eventId: eventId,
                 });
 
                 console.log('data:', data);
 
-                 senderChatId = data.data.data;
+                senderChatId = data.data.data;
                 console.log('senderChatId: ', senderChatId);
 
             } catch (error) {
@@ -171,7 +174,7 @@
 
 
             const chatBox = document.getElementById("chatBox");
-            
+
             document.getElementById("messageInput").value = '';
             document.getElementById("sendMessageBtn").onclick = () => sendMessage();
 
@@ -180,13 +183,14 @@
         }
 
         socket.on("message", (data) => {
+            console.log('data: ', data);
             const chatBox = document.getElementById("chatBox");
 
             if (data.senderId === userId && data.receiverId === organizerId
                 || data.senderId === organizerId && data.receiverId === userId
             ) {
                 const messageDiv = document.createElement("div");
-                messageDiv.textContent = `${data.senderId === userId ? "you" : `${organizerId}`}: ${data.message}`;
+                messageDiv.textContent = `${data.senderId === organizerId ? "you" : `${userId}`}: ${data.message}`;
                 chatBox.appendChild(messageDiv);
             }
         });
@@ -199,11 +203,11 @@
             const message = messageInput.value;
 
             if (message.trim() !== '') {
-            
+
                 const messagePayload = {
                     chatId: senderChatId,
-                    senderId: userId,
-                    receiverId:organizerId,
+                    senderId: organizerId,
+                    receiverId: userId,
                     eventId: eventId,
                     message: message
                 };
@@ -215,7 +219,8 @@
                     const response = await fetch("http://localhost:5001/api/organizer/message/saveMessage", {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json'},
+                            'Content-Type': 'application/json'
+                        },
                         body: JSON.stringify(messagePayload)
                     });
 
