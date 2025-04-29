@@ -109,13 +109,21 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
     <script>
-        const socket = io('http://localhost:5001');
+        const socket = io('http://localhost:5000');
 
         // data to be sent when registering
         const data = {
             userId: "683c262e-b7fa-46b0-8471-1981714e3c15",
             eventId: "283589a3-ec80-4176-947a-fb17168b537b",
         };
+
+
+        // const token = localStorage.getItem("token");
+        // if (!token) {
+        //     alert("Please log in first.");
+        //     window.location.href = "/login.html";
+        // }
+
 
         let organizerId;
         let organizerName;
@@ -159,7 +167,13 @@
                     user1Id: organizerId,
                     user2Id: userId,
                     eventId: eventId,
-                });
+                },
+                    // {
+                    //     headers: {
+                    //         Authorization: `Bearer ${token}`,
+                    //     },
+                    // }
+                );
 
                 console.log('data:', data);
 
@@ -195,9 +209,6 @@
             }
         });
 
-
-
-
         // Function to send the message (for demo purposes)
         async function sendMessage() {
             const message = messageInput.value;
@@ -216,18 +227,28 @@
 
 
                 try {
-                    const response = await fetch("http://localhost:5001/api/organizer/message/saveMessage", {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(messagePayload)
-                    });
+                    console.log("server")
+                    // const response = await axios.post("http://localhost:5001/api/organizer/message/saveMessage", {
 
-                    const data = await response.json();
+                    //     // headers: {
+                    //     //     'Content-Type': 'application/json',
+                    //     //     Authorization: `Bearer ${token}`,
+                    //     // },
+
+                    //     body: messagePayload
+                    // });
+                    const response = await axios.post("http://localhost:5001/api/organizer/message/saveMessage",
+                        messagePayload
+                    );
+
+
+
+
+                    console.log('response: ', response);
+                    const data = response.data;
                     console.log('data: ', data);
 
-                    if (!response.ok) {
+                    if (response.status !== 200 && response.status !== 201) {
                         console.error("API error:", data.message || data.error);
                     }
                 } catch (error) {
@@ -235,9 +256,9 @@
                 }
 
                 // Optionally, display the message in the chat box immediately
-                // const messageDiv = document.createElement('div');
-                // messageDiv.textContent = `you: ${message}`;
-                // chatBox.appendChild(messageDiv);
+                const messageDiv = document.createElement('div');
+                messageDiv.textContent = `you: ${message}`;
+                chatBox.appendChild(messageDiv);
 
                 // Clear the input field
                 messageInput.value = '';

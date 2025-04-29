@@ -8,7 +8,7 @@ const getorcreate = async (req, res) => {
   console.log("req.body: ", req.body);
 
   try {
-    console.log("first");
+    // console.log("first");
     let chat = await Chat.findOne({
       where: {
         userId: user2Id,
@@ -26,7 +26,7 @@ const getorcreate = async (req, res) => {
         createdBy: user1Id,
       });
 
-      console.log("chat: ", chat);
+      // console.log("chat: ", chat);
       console.log("Chat created successfully.");
       return res.status(HTTP_STATUS_CODES.CREATED).json({
         status: HTTP_STATUS_CODES.CREATED,

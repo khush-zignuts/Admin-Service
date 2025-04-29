@@ -1,4 +1,3 @@
-const Admin = require("./Admin");
 const Booking = require("./Booking");
 const Chat = require("./Chat");
 const EmailQueue = require("./Emailqueue");
@@ -8,10 +7,11 @@ const Message = require("./Message");
 const User = require("./User");
 const Notification = require("./Notification");
 const Organizer = require("./Organizer");
+const SocketIO = require("./SocketIO");
+const Admin = require("./Admin");
 
 // ================= ASSOCIATIONS =====================
 
-// Admin.sync({ force: true, alter: true });
 // Booking.sync({ force: true, alter: true });
 // Chat.sync({ force: true, alter: true });
 // EmailQueue.sync({ force: true, alter: true });
@@ -20,9 +20,8 @@ const Organizer = require("./Organizer");
 // Message.sync({ force: true, alter: true });
 // User.sync({ force: true, alter: true });
 // Notification.sync({ force: true, alter: true });
-// Organizer.sync({ force: true, alter: true });
+// SocketIO.sync({ force: true, alter: true });
 
-//organizer
 //organizer and Chat associations
 Organizer.hasMany(Chat, { foreignKey: "organizerId", onDelete: "CASCADE" });
 Chat.belongsTo(Organizer, { foreignKey: "organizerId" });
@@ -71,14 +70,15 @@ Message.belongsTo(Chat, { foreignKey: "chatId" });
 // ================= EXPORT ALL MODELS =================
 
 module.exports = {
+  Admin,
   User,
   Event,
   Booking,
   Chat,
   Message,
   Organizer,
-  Admin,
   EmailQueue,
   EventFeedback,
   Notification,
+  SocketIO,
 };

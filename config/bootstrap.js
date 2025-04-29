@@ -8,6 +8,7 @@ const adminBootstrap = async () => {
       where: { isDeleted: false },
       attributes: ["id"],
     });
+    // console.log("existingAdmin: ", existingAdmin);
 
     if (!existingAdmin) {
       console.log("first");

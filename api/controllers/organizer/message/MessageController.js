@@ -4,8 +4,8 @@ const { Op } = require("sequelize");
 
 const saveMessage = async (req, res) => {
   try {
-    const { chatId, senderId, receiverId, message ,eventId  } = req.body;
     console.log("req.body: ", req.body);
+    const { chatId, senderId, receiverId, message, eventId } = req.body;
 
     // Save message to DB
     const savedMessage = await Message.create({
@@ -13,11 +13,11 @@ const saveMessage = async (req, res) => {
       senderId,
       receiverId,
       content: message,
-      eventId:eventId,
-      deliveredAt:Math.floor(Date.now() / 1000) * 1000, 
+      eventId: eventId,
+      deliveredAt: Math.floor(Date.now() / 1000) * 1000,
     });
 
-    console.log( "Message sent successfully.")
+    console.log("Message sent successfully.");
     return res.status(HTTP_STATUS_CODES.CREATED).json({
       status: HTTP_STATUS_CODES.CREATED,
       message: "Message sent successfully.",
