@@ -23,7 +23,7 @@ const Event = sequelize.define(
       allowNull: false,
     },
     date: {
-      type: DataTypes.DATE,
+      type: DataTypes.BIGINT,
       allowNull: false,
     },
     startTime: {

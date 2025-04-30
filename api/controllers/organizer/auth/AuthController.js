@@ -89,7 +89,7 @@ module.exports = {
       await sendEmail(
         email,
         "Verify Your Email - OTP",
-        "../../assets/templates/otp-verification-email.handlebars",
+        "../../assets/templates/otp-verification-email.hbs",
         templateData
       );
 

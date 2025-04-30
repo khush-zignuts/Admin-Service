@@ -4,8 +4,9 @@ const { Op } = require("sequelize");
 
 const saveMessage = async (req, res) => {
   try {
-    console.log("req.body: ", req.body);
+    // console.log("req.body: ", req.body);
     const { chatId, senderId, receiverId, message, eventId } = req.body;
+    console.log("User Enter in save message : ");
 
     // Save message to DB
     const savedMessage = await Message.create({

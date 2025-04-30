@@ -23,6 +23,11 @@ module.exports = {
       console.log("organizerId: ", organizerId);
       console.log("req.body: ", req.body);
 
+      const dateString = req.body.date;
+      const millidateseconds = new Date(dateString).getTime();
+
+      console.log(millidateseconds); // 👉 1750012800000
+
       const validation = new VALIDATOR(req.body, {
         title: VALIDATION_RULES.EVENT.TITLE,
         description: VALIDATION_RULES.EVENT.DESCRIPTION,
@@ -62,8 +67,8 @@ module.exports = {
 
       console.log("existingEvent: ", existingEvent);
       if (existingEvent) {
-        return res.status(HTTP_STATUS_CODES.BAD_REQUESTESTESTEST).json({
-          status: HTTP_STATUS_CODES.BAD_REQUESTESTEST,
+        return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
+          status: HTTP_STATUS_CODES.BAD_REQUEST,
           message: "Event with the same title and date already exists.",
           data: "",
           error: "Event already exists",
@@ -74,7 +79,7 @@ module.exports = {
         title,
         description,
         location,
-        date,
+        date: millidateseconds,
         startTime,
         endTime,
         capacity,

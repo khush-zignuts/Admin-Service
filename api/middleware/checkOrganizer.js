@@ -51,6 +51,7 @@ const checkOrganizer = async (req, res, next) => {
         error: "",
       });
     }
+    console.log("organizer found");
 
     // Set organizer on request object
     req.organizer = organizer;

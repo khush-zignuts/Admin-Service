@@ -192,7 +192,7 @@ module.exports = {
       await sendEmail(
         user.email,
         "You have been accepted for the event!",
-        "../../assets/templates/event-acceptance-email.handlebars",
+        "../../assets/templates/event-acceptance-email.hbs",
         emailTemplateData
       );
 
@@ -319,7 +319,7 @@ module.exports = {
       await sendEmail(
         user.email,
         "Unfortunately, you have been declined for the event.",
-        "../../assets/templates/event-decline-email.handlebars",
+        "../../assets/templates/event-decline-email.hbs",
         emailTemplateData
       );
 

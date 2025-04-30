@@ -32,7 +32,7 @@ module.exports = {
       TITLE: "required|string|min:3|max:100",
       DESCRIPTION: "required|string|min:10",
       LOCATION: "required|string|min:2|max:100",
-      DATE: "required|date",
+      DATE: "required",
       START_TIME: "required|string",
       END_TIME: "required|string",
       CAPACITY: "required|integer|min:1|max:10000",

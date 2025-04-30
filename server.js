@@ -11,7 +11,7 @@ const cors = require("cors"); // <-- Import cors
 const sequelize = require("./config/db");
 
 const adminBootstrap = require("./config/bootstrap");
-const startEventReminderJob = require('./api/helper/startEventReminderJob');
+const startEventReminderJob = require("./api/helper/startEventReminderJob");
 
 require("./config/firebase");
 const apiRoutes = require("./api/routes/index");
@@ -28,10 +28,14 @@ app.use(
   })
 );
 
-//for internal html :
+// Serve static files
+app.use(express.static(path.join(__dirname, "api", "public")));
+
+// Root route
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "api", "public", "login.html"));
+  res.sendFile(path.join(__dirname, "api", "public", "index.html"));
 });
+
 //middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -48,7 +52,7 @@ app.use(bodyParser.json());
 })();
 
 //cron job:
-startEventReminderJob(); 
+startEventReminderJob();
 
 //Routes
 app.use("/api", apiRoutes);
@@ -59,6 +63,7 @@ server.listen(PORT, async () => {
   try {
     // socketSetup(server);
     // await sequelize.sync({ alter: true });
+    // await sequelize.sync({ force: true });
     console.log(`Server is running on port ${PORT}`);
   } catch (error) {
     console.log(error.message);
