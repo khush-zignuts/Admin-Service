@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Event Reminder</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #fffbe6;
+      margin: 0;
+      padding: 20px;
+      color: #2c3e50;
+    }
+
+    .reminder {
+      background-color: #fdf2c5;
+      border: 3px dashed #f39c12;
+      border-radius: 15px;
+      width: 100%;
+      max-width: 400px;
+      margin: 0 auto;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: bold;
+      color: #e67e22;
+      margin-bottom: 10px;
+    }
+
+    .section-title {
+      font-weight: bold;
+      font-size: 18px;
+      margin-top: 10px;
+      text-decoration: underline;
+    }
+
+    .info {
+      margin: 6px 0;
+      font-size: 15px;
+    }
+
+    .organizer,
+    .attendee {
+      margin-top: 20px;
+      background-color: #fff9e6;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .reminder-note {
+      margin-top: 20px;
+      font-size: 14px;
+      background-color: #fcf8e3;
+      padding: 12px;
+      border-radius: 5px;
+      border: 1px dashed #f1c40f;
+    }
+
+    .footer {
+      margin-top: 20px;
+      font-size: 13px;
+      color: #7f8c8d;
+    }
+  </style>
+</head>
+<body>
+  <div class="reminder">
+    <div class="logo">📣 24-Hour Reminder from<br><span style="color:#e74c3c;">The Event Management Team</span></div>
+
+    <div class="section-title">{{eventTitle}}</div>
+    <div class="info"><em>is happening in less than 24 hours!</em></div>
+    <div class="info">📅 Date: {{eventDate}}</div>
+    <div class="info">⏰ Start Time: {{eventStartTime}}</div>
+    <div class="info">📍 Venue: {{eventVenue}}</div>
+
+    <div class="organizer">
+      <strong>Organizer</strong><br>
+      Name: {{organizerName}}<br>
+    </div>
+
+    <div class="attendee">
+      <strong>Attendee</strong><br>
+      Name: {{userName}}<br>
+      Phone: {{userPhone}}
+    </div>
+
+    <div class="reminder-note">
+      Please make sure to be on time and feel free to reach out to your organizer <strong>{{organizerName}}</strong> if you have any questions.
+    </div>
+
+    <div class="footer">
+      This is an automated reminder from The Event Management Team.
+    </div>
+  </div>
+</body>
+</html>

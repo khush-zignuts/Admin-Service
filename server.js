@@ -9,7 +9,9 @@ const server = require("http").createServer(app);
 const bodyParser = require("body-parser");
 const cors = require("cors"); // <-- Import cors
 const sequelize = require("./config/db");
+
 const adminBootstrap = require("./config/bootstrap");
+const startEventReminderJob = require('./api/helper/startEventReminderJob');
 
 require("./config/firebase");
 const apiRoutes = require("./api/routes/index");
@@ -44,6 +46,9 @@ app.use(bodyParser.json());
     console.log(err.message);
   }
 })();
+
+//cron job:
+startEventReminderJob(); 
 
 //Routes
 app.use("/api", apiRoutes);
