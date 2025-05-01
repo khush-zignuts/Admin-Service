@@ -1,11 +1,16 @@
+Here's the updated `README.md` file including the full structure and features of your **Admin-Service** project for the real-time event management system:
+
+---
+
 # 🎉 Real-Time Event Management System
 
-A real-time event management platform built with **Node.js + Express + Sequelize** on the backend. The system supports authentication, event booking, chat, push notifications (via Firebase), email alerts, access (admin, organizer, user), and more.
+A real-time event management platform built with **Node.js + Express + Sequelize** on the backend. The system supports authentication, event booking, chat, push notifications (via Firebase), email alerts, role-based access (admin, organizer, user), and more.
 
 ---
 
 ## 📁 Project Structure
 
+```
 Admin-Service/
 ├─ .vscode/
 │  └─ settings.json
@@ -112,7 +117,7 @@ Admin-Service/
 ├─ package.json
 ├─ server.js
 └─ temp.js
-
+```
 
 ---
 
@@ -121,27 +126,32 @@ Admin-Service/
 ### ✅ Common Features
 
 - JWT-based authentication
--  access (Admin, Organizer, User)
+- Role-based access (Admin, Organizer, User)
 - Firebase Cloud Messaging (FCM) push notifications
 - Real-time messaging using Socket.IO
 - Email templates via Handlebars (OTP, event reminder, etc.)
 - Cron jobs for automated reminders
-- Booking capacity check
+- Event booking with capacity checks
 - Sequelize ORM with PostgreSQL
+
+---
 
 ### 🎨 Frontend (`react-auth-app`)
 
-- Firebase integration for notifications
-- Modular components (AcceptUser, DeclineUser, Chat)
-- Realtime interaction with backend APIs
-- Easily extendable UI
+- Firebase integration for push notifications
+- Modular UI components (AcceptUser, DeclineUser, Chat)
+- Interacts with backend APIs in real time
+- Easy-to-extend React components
+
+---
 
 ### 🔧 Backend (`Admin-Service`)
 
-- Models for Event, Booking, Notification, Message, EmailQueue, etc.
-- Helpers for sending push/email notifications
-- Middleware for authentication & authorization
-- Public pages for chat, login (in `public/`)
+- Organized MVC structure
+- Models for User, Admin, Organizer, Event, Booking, Notification, Message, Chat, EmailQueue, etc.
+- Helper utilities for email and push notifications
+- Public frontend pages (`chat.html`, `login.html`) served from `/public`
+- Cron scheduler for event reminders
 
 ---
 
@@ -213,16 +223,16 @@ npm run dev
 | `/api/organizer/chat`           | GET    | Get chat history                     |
 | `/api/organizer/message/send`   | POST   | Send real-time message               |
 
-More routes organized under `routes/` and `controllers/`.
+More available in `routes/` and `controllers/`.
 
 ---
 
 ## 🔔 Firebase Cloud Messaging (FCM)
 
-- Set up Firebase project
-- Add FCM credentials to both frontend and backend `.env` files
-- Add `firebase-messaging-sw.js` to `public/` folders
-- Ensure push permissions are handled in frontend React components
+- Configure Firebase project
+- Add credentials in both frontend and backend `.env`
+- Register service worker (`firebase-messaging-sw.js`) in `/public`
+- Ensure user grants notification permission in React app
 
 ---
 
@@ -239,34 +249,28 @@ Located in `Admin-Service/assets/templates/`:
 
 ## 📸 UI Components (Frontend)
 
-- `AcceptUser.jsx`: Trigger accept route and show notification
-- `DeclineUser.jsx`: Trigger decline route and send notification
-- `Chat.jsx`: Real-time one-to-one chat via Socket.IO
+- `AcceptUser.jsx`: Accepts user for event & sends notification
+- `DeclineUser.jsx`: Declines user & sends notification
+- `Chat.jsx`: Real-time private chat with Socket.IO
 
 ---
 
 ## 🖔 Background Jobs
 
-- `startEventReminderJob.js`: Sends reminders via cron
-- Runs periodically to notify users about upcoming events
+- Cron job `startEventReminderJob.js`
+- Automatically notifies participants about upcoming events
 
 ---
 
 ## 🛠️ Tech Stack
 
-**Frontend:** React, Vite, Firebase, Tailwind (optional)<br>
-**Backend:** Node.js, Express, Sequelize, PostgreSQL<br>
-**Real-time:** Socket.IO<br>
-**Notifications:** Firebase Cloud Messaging (FCM), Nodemailer<br>
-**Job Scheduler:** Node-Cron
+**Frontend:** React, Vite, Firebase, TailwindCSS (optional)  
+**Backend:** Node.js, Express, Sequelize, PostgreSQL  
+**Real-time:** Socket.IO  
+**Notifications:** Firebase Cloud Messaging (FCM), Nodemailer (email)  
+**Templating:** Handlebars  
+**Job Scheduler:** Node Cron
 
 ---
 
-## 🙌 Acknowledgements
-
-- [Firebase](https://firebase.google.com/)
-- [Socket.IO](https://socket.io/)
-- [Sequelize](https://sequelize.org/)
-- [Vite](https://vitejs.dev/)
-- [Express](https://expressjs.com/)
-
+Would you like help generating a `README.md` file directly from this so you can copy and paste it easily?
