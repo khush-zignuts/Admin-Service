@@ -2,6 +2,7 @@ const { Event } = require("../../../models/index");
 const { HTTP_STATUS_CODES } = require("../../../../config/constant");
 const { VALIDATION_RULES } = require("../../../../config/validationRules");
 const VALIDATOR = require("validatorjs");
+const moment = require("moment-timezone");
 
 const { Sequelize, where } = require("sequelize");
 const sequelize = require("../../../../config/db");
@@ -23,10 +24,24 @@ module.exports = {
       console.log("organizerId: ", organizerId);
       console.log("req.body: ", req.body);
 
-      const dateString = req.body.date;
-      const millidateseconds = new Date(dateString).getTime();
+      // const dateString = req.body.date;
+      // const millidateseconds = new Date(dateString).getTime();
 
-      console.log(millidateseconds); // 👉 1750012800000
+      // console.log(millidateseconds); // 👉 1750012800000
+
+      const dateString = req.body.date; // Date string from the request body
+
+      const istMoment = moment.tz(
+        dateString + " 00:00:00",
+        "YYYY-MM-DD HH:mm:ss",
+        "Asia/Kolkata"
+      );
+
+      const istDate = istMoment.format("YYYY-MM-DD HH:mm:ss");
+      const istMilliseconds = istMoment.valueOf();
+
+      console.log("IST Date:", istDate);
+      console.log("Milliseconds in IST:", istMilliseconds);
 
       const validation = new VALIDATOR(req.body, {
         title: VALIDATION_RULES.EVENT.TITLE,

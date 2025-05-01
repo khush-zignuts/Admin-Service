@@ -15,6 +15,7 @@ const getorcreate = async (req, res) => {
         organizerId: user1Id,
         eventId: eventId,
       },
+      attributes: ["id"],
     });
 
     // console.log('chat: ', chat);

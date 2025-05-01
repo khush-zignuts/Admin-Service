@@ -1,76 +1,88 @@
 const cron = require("node-cron");
 const moment = require("moment-timezone");
-const { Op } = require("sequelize");
-const { Event, Booking, User, Organizer } = require("../models/index");
-const { sendEmail } = require("../helper/sendEmail");
+const sequelize = require("../../config/db");
+const sendEmail = require("../helper/sendEmail");
+const { QueryTypes } = require("sequelize");
 
 const startEventReminderJob = () => {
   cron.schedule("* * * * * *", async () => {
     console.log("startEventReminderJob running every second");
     try {
-      console.log("In cron job");
-      const now = moment();
-      const twentyFourHoursLater = now.clone().add(24, "hours");
+      const nowIST = moment().tz("Asia/Kolkata");
+      console.log(
+        "Current IST DateTime:",
+        nowIST.format("YYYY-MM-DD, HH:mm:ss")
+      );
 
-      // Convert twentyFourHoursLater to a BIGINT timestamp in milliseconds
-      const timestamp = twentyFourHoursLater.valueOf();
+      // Add 24 hours
+      const after24HoursIST = nowIST.clone().add(24, "hours");
 
-      // Fetch events happening exactly 24 hours from now
-      const events = await Event.findAll({
-        where: {
-          // Check if the event's date (BIGINT) matches 24 hours from now
-          date: {
-            [Op.eq]: timestamp, // This assumes 'date' is stored as a BIGINT
-          },
-          start_time: {
-            [Op.eq]: twentyFourHoursLater.format("HH:mm:ss"),
-          },
-        },
-        attributes: [
-          "id",
-          "title",
-          "date",
-          "start_time",
-          "organizerId",
-          "location",
-        ],
+      // Extract date and time separately
+      const formatted = after24HoursIST.format("YYYY-MM-DD, HH:mm:ss");
+      console.log("IST DateTime after 24 hours:", formatted);
+
+      // Extract date and time components
+      const extractedDate = after24HoursIST.format("YYYY-MM-DD");
+      const extractedTime = after24HoursIST.format("HH:mm:ss");
+
+      console.log("Extracted Date:", extractedDate);
+      console.log("Extracted Time:", extractedTime);
+
+      const istMoment = moment.tz(
+        extractedDate + " 00:00:00",
+        "YYYY-MM-DD HH:mm:ss",
+        "Asia/Kolkata"
+      );
+
+      const istDate = istMoment.format("YYYY-MM-DD HH:mm:ss");
+      const istMilliseconds = istMoment.valueOf();
+
+      console.log("IST Date:", istDate);
+      console.log("Milliseconds in IST:", istMilliseconds);
+
+      const eventQuery = `
+        SELECT id, title, date, start_time, organizer_id, location
+        FROM event
+        WHERE date = :istMilliseconds
+        AND start_time = :extractedTime;
+      `;
+      const events = await sequelize.query(eventQuery, {
+        replacements: { istMilliseconds, extractedTime },
+        type: QueryTypes.SELECT,
       });
 
       console.log("events: ", events);
-
       for (const event of events) {
-        const bookings = await Booking.findAll({
-          where: { eventId: event.id, status: "booked" },
-          attributes: ["userId", "organizerId"],
+        const bookingQuery = `
+          SELECT b.user_id AS "userId", b.organizer_id, u.name AS "userName", u.email AS "userEmail", o.name AS "organizerName"
+          FROM booking b
+          JOIN "user" u ON u.id = b.user_id
+          JOIN organizer o ON o.id = b.organizer_id
+          WHERE b.event_id = :eventId AND b.status = 'booked';
+        `;
+        const bookings = await sequelize.query(bookingQuery, {
+          replacements: { eventId: event.id },
+          type: QueryTypes.SELECT,
         });
-
+        console.log("bookings: ", bookings);
         for (const booking of bookings) {
-          const user = await User.findOne({
-            where: { id: booking.userId },
-            attributes: ["name", "email", "phone"],
-          });
-
-          const organizer = await Organizer.findOne({
-            where: { id: booking.organizerId },
-            attributes: ["name"],
-          });
-
-          const to = user.email;
+          const to = booking.userEmail;
           const subject = `Reminder: Your event "${event.title}" is starting soon`;
-          const templatePath = "emails/eventReminder";
+          const templatePath =
+            "../../assets/templates/event-reminder-email.hbs";
           const templateData = {
             eventTitle: event.title,
-            eventDate: moment(event.date).format("YYYY-MM-DD"),
+            eventDate: extractedDate,
             eventStartTime: event.start_time,
             eventVenue: event.location,
-            organizerName: organizer.name,
-            userName: user.name,
+            organizerName: booking.organizerName,
+            userName: booking.userName,
           };
-
           console.log("email data: ", templateData);
-
           await sendEmail(to, subject, templatePath, templateData);
-          console.log(`Email sent to user ${user.id} for event: ${event.id}`);
+          console.log(
+            `Email sent to user ${booking.userName} for event: ${event.id}`
+          );
         }
       }
     } catch (error) {
@@ -78,5 +90,4 @@ const startEventReminderJob = () => {
     }
   });
 };
-
 module.exports = startEventReminderJob;
