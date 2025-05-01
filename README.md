@@ -1,6 +1,3 @@
-Here's the updated `README.md` file including the full structure and features of your **Admin-Service** project for the real-time event management system:
-
----
 
 # 🎉 Real-Time Event Management System
 
@@ -272,5 +269,3 @@ Located in `Admin-Service/assets/templates/`:
 **Job Scheduler:** Node Cron
 
 ---
-
-Would you like help generating a `README.md` file directly from this so you can copy and paste it easily?
