@@ -1,4 +1,3 @@
-// Helper function to format date
 const formatDate = (dateString) => {
   try {
     const formattedDate = new Date(dateString).toLocaleDateString("en-US", {
@@ -10,7 +9,7 @@ const formatDate = (dateString) => {
     return formattedDate;
   } catch (error) {
     console.error("Error formatting date:", error.message);
-    return null; // Return null if error occurs
+    return null; 
   }
 };
 

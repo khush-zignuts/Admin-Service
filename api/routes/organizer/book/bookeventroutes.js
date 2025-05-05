@@ -1,5 +1,5 @@
 const express = require("express");
-const { bookEventController } = require("../../../controllers/organizer");
+const bookEventController = require("../../../controllers/organizer/booking/bookEventController");
 const checkOrganizer = require("../../../middleware/checkOrganizer");
 const router = express.Router();
 
@@ -10,11 +10,10 @@ router
     checkOrganizer,
     bookEventController.getAllPendingRequest
   )
-  // .post("/acceptuser", checkOrganizer, bookEventController.acceptUserForEvent)
-  .post("/acceptUser", bookEventController.acceptUserForEvent)
+  .post("/acceptuser", checkOrganizer, bookEventController.acceptUserForEvent)
   .post(
     "/declineUser",
-    // checkOrganizer,
+    checkOrganizer,
     bookEventController.declineUserForEvent
   );
 

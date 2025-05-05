@@ -1,5 +1,8 @@
 const { Event } = require("../../../models/index");
-const { HTTP_STATUS_CODES } = require("../../../../config/constant");
+const {
+  HTTP_STATUS_CODES,
+  PAGINATION,
+} = require("../../../../config/constant");
 const { Sequelize, Op } = require("sequelize");
 const sequelize = require("../../../../config/db");
 
@@ -8,8 +11,9 @@ module.exports = {
     try {
       let { search } = req.query;
 
-      page = parseInt(req.query.page) || 1;
-      limit = parseInt(req.query.limit) || 10;
+      let page = parseInt(req.query.page) || PAGINATION.DEFAULT_PAGE;
+      let limit = parseInt(req.query.limit) || PAGINATION.DEFAULT_LIMIT;
+
       const offset = (page - 1) * limit;
 
       let whereClause = "WHERE e.is_deleted = false ";
@@ -31,7 +35,7 @@ module.exports = {
         e.end_time
       FROM event AS e
       ${whereClause}
-      ORDER BY e.date ASC, e.time ASC 
+      ORDER BY e.date ASC, e.start_time ASC 
       ${paginationClause};
     `;
 
@@ -69,7 +73,6 @@ module.exports = {
         data: {
           events: results,
           totalRecords,
-          totalPages,
         },
         error: "",
       });

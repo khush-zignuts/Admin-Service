@@ -18,6 +18,17 @@ module.exports = {
   TOKEN_EXPIRY: {
     ACCESS_TOKEN: "5d",
   },
+  VALIDATE_PASSWORD:
+    "required|min:8|max:16|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,16}$/",
 
-  generateUUID: () => uuidv4(),
+  BOOKING_STATUS: {
+    PENDING: "pending",
+    BOOKED: "booked",
+    CANCELLED: "cancelled",
+  },
+
+  PAGINATION: {
+    DEFAULT_PAGE: 1,
+    DEFAULT_LIMIT: 10,
+  },
 };

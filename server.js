@@ -11,7 +11,7 @@ const cors = require("cors"); // <-- Import cors
 const sequelize = require("./config/db");
 
 const adminBootstrap = require("./config/bootstrap");
-const startEventReminderJob = require("./api/helper/startEventReminderJob");
+const startEventReminderJob = require("./api/helper/Cron/startEventReminderJob");
 
 require("./config/firebase");
 const apiRoutes = require("./api/routes/index");
@@ -52,7 +52,7 @@ app.use(bodyParser.json());
 })();
 
 //cron job:
-startEventReminderJob();
+// startEventReminderJob();
 
 //Routes
 app.use("/api", apiRoutes);

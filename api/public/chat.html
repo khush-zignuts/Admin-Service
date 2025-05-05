@@ -208,8 +208,8 @@
             // console.log('organizerId: ', organizerId);
 
             const chatBox = document.getElementById("chatBox");
-            const messageDiv = document.createElement("div");  
-          // messageDiv.textContent = ` ${data.message}`;
+            const messageDiv = document.createElement("div");
+            // messageDiv.textContent = ` ${data.message}`;
 
 
             if (data.senderId === organizerId) {
@@ -253,7 +253,7 @@
                     //     body: messagePayload
                     // });
                     const response = await axios.post(
-                        "http://localhost:5000/api/organizer/message/sendMessage",
+                        "http://localhost:5000/api/organizer/message/send",
                         messagePayload,
                         {
                             headers: {

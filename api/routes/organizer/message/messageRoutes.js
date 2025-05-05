@@ -1,20 +1,13 @@
 const express = require("express");
-const { messageController } = require("../../../controllers/organizer/index");
+const messageController = require("../../../controllers/organizer/message/messageController");
+const checkOrganizer = require("../../../middleware/checkOrganizer");
 
 const router = express.Router();
 
 // Send a message
-// router.post("/send", checkUser, messageController.saveMessage);
-router.post("/saveMessage", messageController.saveMessage);
+router.post("/send", checkOrganizer, messageController.sendMessage);
 
 // Get all messages between two users
-// router.get("get/:chatId", checkUser, messageController.getMessages);
-router.get("get/:chatId", messageController.getMessages);
-
-// Delete a specific message
-// router.delete("/:messageId", messageController.deleteMessage);
-
-// Search messages between two users
-// router.get("/search", messageController.searchMessages);
+// router.get("get/:chatId", checkOrganizer, messageController.getMessages);
 
 module.exports = router;

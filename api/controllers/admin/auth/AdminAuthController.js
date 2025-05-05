@@ -1,7 +1,7 @@
 const VALIDATOR = require("validatorjs");
 const jwt = require("jsonwebtoken");
 
-const comparePassword = require("../../../utils/comparePassword");
+const { comparePassword } = require("../../../utils/utils");
 const {
   HTTP_STATUS_CODES,
   TOKEN_EXPIRY,
@@ -37,7 +37,7 @@ module.exports = {
       if (!admin) {
         return res.status(HTTP_STATUS_CODES.UNAUTHORIZED).json({
           status: HTTP_STATUS_CODES.UNAUTHORIZED,
-          message: "User not found.",
+          message: "Admin not found.",
           data: "",
           error: "",
         });
@@ -86,19 +86,10 @@ module.exports = {
 
         attributes: ["id", "name", "accessToken"],
       });
-
       if (!admin) {
-        return res.json({
+        return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({
           status: HTTP_STATUS_CODES.NOT_FOUND,
-          message: "invalidCredentials",
-          data: "",
-          error: "",
-        });
-      }
-      if (!admin.accessToken) {
-        return res.json({
-          status: HTTP_STATUS_CODES.BAD_REQUEST,
-          message: "Already logged out",
+          message: "Admin not found.",
           data: "",
           error: "",
         });
@@ -113,10 +104,9 @@ module.exports = {
         { where: { id: adminId, isDeleted: false } }
       );
 
-      console.log("first");
-      return res.json({
+      return res.status(HTTP_STATUS_CODES.OK).json({
         status: HTTP_STATUS_CODES.OK,
-        message: "logout",
+        message: "Logout successful.",
         data: "",
         error: "",
       });

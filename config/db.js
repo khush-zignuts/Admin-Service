@@ -20,7 +20,7 @@ const sequelize = new Sequelize(
 (async () => {
   try {
     await sequelize.authenticate();
-    console.log(" Connected to PostgreSQL Database  OKfully!");
+    console.log(" Connected to PostgreSQL Database successfully!");
   } catch (error) {
     console.error("Unable to connect to the database:", error);
   }

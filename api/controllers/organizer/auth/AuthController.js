@@ -2,10 +2,10 @@ const otpGenerator = require("otp-generator");
 const VALIDATOR = require("validatorjs");
 
 const jwt = require("jsonwebtoken");
-const generateUUID = require("../../../utils/generateUUID");
-const verifyOTP = require("../../../utils/verifyOtp");
-const hashPw = require("../../../utils/hashPw");
-const comparePassword = require("../../../utils/comparePassword");
+const { generateUUID } = require("../../../utils/utils");
+const { verifyOTP } = require("../../../utils/utils");
+const { hashPw } = require("../../../utils/utils");
+const { comparePassword } = require("../../../utils/utils");
 const {
   HTTP_STATUS_CODES,
   TOKEN_EXPIRY,
@@ -13,7 +13,7 @@ const {
 const { VALIDATION_RULES } = require("../../../../config/validationRules");
 
 const { Organizer } = require("../../../models/index");
-const sendEmail = require("../../../helper/sendEmail");
+const sendEmail = require("../../../helper/Mail/sendEmail");
 
 module.exports = {
   signup: async (req, res) => {
@@ -74,9 +74,7 @@ module.exports = {
       });
 
       let otpStore = {};
-
       otpStore[email] = otp;
-      console.log("otp: ", otp);
 
       const templateData = {
         userName: name,
@@ -85,7 +83,6 @@ module.exports = {
         year: new Date().getFullYear(),
       };
 
-      console.log("templateData: ", templateData);
       await sendEmail(
         email,
         "Verify Your Email - OTP",
@@ -243,11 +240,11 @@ module.exports = {
       });
 
       if (!organizer) {
-        return res.json({
+        return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({
           status: HTTP_STATUS_CODES.NOT_FOUND,
-          message: "invalidCredentials",
+          message: "Invalid credentials",
           data: "",
-          error: "",
+          error: "USER_NOT_FOUND",
         });
       }
       if (!organizer.accessToken) {
@@ -265,20 +262,21 @@ module.exports = {
           updatedAt: Math.floor(Date.now() / 1000),
           updatedBy: organizerId,
           isLogin: false,
-          isOnlin: false,
+          isOnline: false,
         },
         { where: { id: organizerId, isDeleted: false } }
       );
-      return res.json({
+
+      return res.status(HTTP_STATUS_CODES.OK).json({
         status: HTTP_STATUS_CODES.OK,
-        message: "logout",
+        message: "Logout successful",
         data: "",
         error: "",
       });
     } catch (error) {
-      return res.json({
+      return res.status(HTTP_STATUS_CODES.SERVER_ERROR).json({
         status: HTTP_STATUS_CODES.SERVER_ERROR,
-        message: "serverError",
+        message: "Server error",
         data: "",
         error: error.message,
       });

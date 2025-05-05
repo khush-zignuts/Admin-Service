@@ -1,7 +1,7 @@
 const cron = require("node-cron");
 const moment = require("moment-timezone");
-const sequelize = require("../../config/db");
-const sendEmail = require("../helper/sendEmail");
+const sequelize = require("../../../config/db");
+const sendEmail = require("../Mail/sendEmail");
 const { QueryTypes } = require("sequelize");
 
 const startEventReminderJob = () => {
@@ -25,9 +25,6 @@ const startEventReminderJob = () => {
       const extractedDate = after24HoursIST.format("YYYY-MM-DD");
       const extractedTime = after24HoursIST.format("HH:mm:ss");
 
-      console.log("Extracted Date:", extractedDate);
-      console.log("Extracted Time:", extractedTime);
-
       const istMoment = moment.tz(
         extractedDate + " 00:00:00",
         "YYYY-MM-DD HH:mm:ss",
@@ -36,9 +33,6 @@ const startEventReminderJob = () => {
 
       const istDate = istMoment.format("YYYY-MM-DD HH:mm:ss");
       const istMilliseconds = istMoment.valueOf();
-
-      console.log("IST Date:", istDate);
-      console.log("Milliseconds in IST:", istMilliseconds);
 
       const eventQuery = `
         SELECT id, title, date, start_time, organizer_id, location
@@ -51,7 +45,6 @@ const startEventReminderJob = () => {
         type: QueryTypes.SELECT,
       });
 
-      console.log("events: ", events);
       for (const event of events) {
         const bookingQuery = `
           SELECT b.user_id AS "userId", b.organizer_id, u.name AS "userName", u.email AS "userEmail", o.name AS "organizerName"
@@ -64,7 +57,7 @@ const startEventReminderJob = () => {
           replacements: { eventId: event.id },
           type: QueryTypes.SELECT,
         });
-        console.log("bookings: ", bookings);
+
         for (const booking of bookings) {
           const to = booking.userEmail;
           const subject = `Reminder: Your event "${event.title}" is starting soon`;
@@ -78,7 +71,7 @@ const startEventReminderJob = () => {
             organizerName: booking.organizerName,
             userName: booking.userName,
           };
-          console.log("email data: ", templateData);
+
           await sendEmail(to, subject, templatePath, templateData);
           console.log(
             `Email sent to user ${booking.userName} for event: ${event.id}`
@@ -87,6 +80,7 @@ const startEventReminderJob = () => {
       }
     } catch (error) {
       console.error("Cron Job Error:", error);
+      throw error;
     }
   });
 };

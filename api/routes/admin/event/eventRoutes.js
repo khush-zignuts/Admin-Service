@@ -1,5 +1,5 @@
 const express = require("express");
-const { AdminEventController } = require("../../../controllers/admin/index");
+const AdminEventController = require("../../../controllers/admin/event/AdminEventController");
 const checkAdmin = require("../../../middleware/checkAdmin");
 const router = express.Router();
 

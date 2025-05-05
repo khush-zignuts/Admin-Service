@@ -1,5 +1,5 @@
 // utils/sendNotification.js
-const admin = require("../../config/firebase");
+const admin = require("../../../config/firebase");
 
 const sendNotification = async (fcmToken, title, body, data = {}) => {
   const message = {

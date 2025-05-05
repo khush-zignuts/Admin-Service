@@ -1,6 +1,6 @@
 const express = require("express");
 
-const { chatController } = require("../../../controllers/organizer/index");
+const chatController = require("../../../controllers/organizer/chat/chatController");
 const checkOrganizer = require("../../../middleware/checkOrganizer");
 const router = express.Router();
 

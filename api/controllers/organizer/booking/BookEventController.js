@@ -1,4 +1,8 @@
-const { HTTP_STATUS_CODES } = require("../../../../config/constant");
+const {
+  HTTP_STATUS_CODES,
+  BOOKING_STATUS,
+  PAGINATION,
+} = require("../../../../config/constant");
 const { Sequelize, Op } = require("sequelize");
 const sequelize = require("../../../../config/db");
 const {
@@ -8,16 +12,18 @@ const {
   Notification,
   Organizer,
 } = require("../../../models/index");
-const { formatDate } = require("../../../helper/formattedDate");
-const sendEmail = require("../../../helper/sendEmail");
-const { sendMessage } = require("../../../helper/sendNotification");
+const { formatDate } = require("../../../helper/Date/formattedDate");
+const sendEmail = require("../../../helper/Mail/sendEmail");
+const {
+  sendMessage,
+} = require("../../../helper/Notification/sendNotification");
 
 module.exports = {
   getAllPendingRequest: async (req, res) => {
     try {
       const organizerId = req.organizer.id;
-      const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 10;
+      const page = parseInt(req.query.page) || PAGINATION.DEFAULT_PAGE;
+      const limit = parseInt(req.query.limit) || PAGINATION.DEFAULT_LIMIT;
       const offset = (page - 1) * limit;
 
       const replacements = { organizerId, limit, offset };
@@ -85,20 +91,17 @@ module.exports = {
 
   acceptUserForEvent: async (req, res) => {
     try {
-      console.log("first");
       const { userId, eventId, fcmToken } = req.body;
       // const organizerId = req.organizer.id;
-      console.log("req.body: ", req.body);
 
       const booked = await Booking.findOne({
         where: {
           userId,
           eventId,
-          status: "booked",
+          status: BOOKING_STATUS.BOOKED,
         },
         attributes: ["id", "status"],
       });
-      console.log("booked: ", booked);
 
       if (booked) {
         return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
@@ -108,11 +111,10 @@ module.exports = {
           error: "BOOKING_ALREADY_EXISTS",
         });
       }
-      console.log("first");
 
       // Update booking status
       await Booking.update(
-        { status: "booked" },
+        { status: BOOKING_STATUS.BOOKED },
         {
           where: {
             userId: userId,
@@ -136,7 +138,6 @@ module.exports = {
           "location",
         ],
       });
-      console.log("event: ", event);
 
       if (!event) {
         return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({
@@ -198,7 +199,7 @@ module.exports = {
 
       // Create and send push notification
       const title = ` Congratulations, ${user.name}!`;
-      const body = `You've been accepted for the event: ${event.title} on ${event.date} at ${event.time}.  
+      const body = `You've been accepted for the event: ${event.title} on ${event.date} at ${event.startTime}.  
                     If you have any questions, 
                     feel free to reach out to the organizer, 
                     ${organizer.name}, via the chat button provided.
@@ -249,11 +250,12 @@ module.exports = {
 
       // Update booking status to cancelled
       await Booking.update(
-        { status: "cancelled" },
+        { status: BOOKING_STATUS.CANCELLED },
         {
           where: {
             userId: userId,
             eventId: eventId,
+            status: BOOKING_STATUS.PENDING,
           },
         }
       );
@@ -263,9 +265,8 @@ module.exports = {
         where: {
           id: eventId,
         },
-        attributes: ["id"],
+        attributes: ["id", "title", "date", "startTime", "organizerId"],
       });
-      console.log("event: ", event);
 
       if (!event) {
         return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({
@@ -278,7 +279,7 @@ module.exports = {
 
       const organizer = await Organizer.findOne({
         where: { id: event.organizerId, isDeleted: false },
-        attributes: ["id", "name", "email"],
+        attributes: ["id", "name", "email", "phoneNumber"],
       });
 
       if (!organizer) {
@@ -291,10 +292,8 @@ module.exports = {
       }
 
       const user = await User.findOne({
-        where: {
-          id: userId,
-        },
-        attributes: ["id"],
+        where: { id: userId },
+        attributes: ["id", "name", "email"],
       });
 
       if (!user) {
@@ -311,7 +310,7 @@ module.exports = {
         userName: user.name,
         eventTitle: event.title,
         eventDate: event.date,
-        eventTime: event.time,
+        eventStartTime: event.startTime,
         organizerName: organizer.name,
         organizerPhonenumber: organizer.phoneNumber,
       };
@@ -345,6 +344,14 @@ module.exports = {
       };
 
       await sendMessage(message);
+
+      await Notification.create({
+        userId: userId,
+        eventId: eventId,
+        title: title,
+        message: body,
+        type: "event", // assuming you're using ENUM
+      });
 
       return res.status(HTTP_STATUS_CODES.OK).json({
         status: HTTP_STATUS_CODES.OK,

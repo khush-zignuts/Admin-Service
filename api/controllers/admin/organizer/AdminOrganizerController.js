@@ -1,18 +1,21 @@
-const { HTTP_STATUS_CODES } = require("../../../../config/constant");
+const {
+  HTTP_STATUS_CODES,
+  PAGINATION,
+} = require("../../../../config/constant");
 const { Sequelize, Op } = require("sequelize");
 const sequelize = require("../../../../config/db");
 const { Organizer } = require("../../../models/index");
-const sendEmail = require("../../../helper/sendEmail");
-const { sendMessage } = require("../../../helper/sendNotification");
+const sendEmail = require("../../../helper/Mail/sendEmail");
+const {
+  sendMessage,
+} = require("../../../helper/Notification/sendNotification");
 
 module.exports = {
   getAllOrganizer: async (req, res) => {
     try {
       let { search } = req.query;
-
-      page = parseInt(req.query.page) || 1;
-      limit = parseInt(req.query.limit) || 10;
-      const offset = (page - 1) * limit;
+      let page = parseInt(req.query.page) || PAGINATION.DEFAULT_PAGE;
+      let limit = parseInt(req.query.limit) || PAGINATION.DEFAULT_LIMIT;
 
       let whereClause = "WHERE o.is_deleted = false ";
       let replacements = { limit, offset };
@@ -68,9 +71,8 @@ module.exports = {
         status: HTTP_STATUS_CODES.OK,
         message: "Events fetched successfully.",
         data: {
-          events: results,
+          organizers: results,
           totalRecords,
-          totalPages,
         },
         error: "",
       });

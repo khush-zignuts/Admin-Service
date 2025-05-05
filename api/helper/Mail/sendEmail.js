@@ -3,7 +3,7 @@ const nodemailer = require("nodemailer");
 const fs = require("fs");
 const path = require("path");
 const handlebars = require("handlebars");
-const { EmailQueue } = require("../models/index");
+const { EmailQueue } = require("../../models/index");
 
 var transport = nodemailer.createTransport({
   host: "sandbox.smtp.mailtrap.io",

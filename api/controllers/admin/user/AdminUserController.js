@@ -1,5 +1,8 @@
 const { Event } = require("../../../models/index");
-const { HTTP_STATUS_CODES } = require("../../../../config/constant");
+const {
+  HTTP_STATUS_CODES,
+  PAGINATION,
+} = require("../../../../config/constant");
 const { VALIDATION_RULES } = require("../../../../config/validationRules");
 const VALIDATOR = require("validatorjs");
 
@@ -11,8 +14,8 @@ module.exports = {
     try {
       let { search } = req.query;
 
-      const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 10;
+      const page = parseInt(req.query.page) || PAGINATION.DEFAULT_PAGE;
+      const limit = parseInt(req.query.limit) || PAGINATION.DEFAULT_LIMIT;
       const offset = (page - 1) * limit;
 
       let whereClause = "WHERE u.is_deleted = false";
@@ -45,7 +48,7 @@ module.exports = {
       if (!results || results.length === 0) {
         return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({
           status: HTTP_STATUS_CODES.NOT_FOUND,
-          message: "User not found",
+          message: "Users not found",
           data: "",
           error: "USER_NOT_FOUND",
         });
@@ -71,7 +74,6 @@ module.exports = {
         data: {
           users: results,
           totalRecords,
-          totalPages,
         },
         error: null,
       });

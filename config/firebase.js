@@ -1,10 +1,17 @@
 const firebaseAdmin = require("firebase-admin");
 const serviceAccount = require("./data.json");
 
-// Initialize Firebase Admin
-firebaseAdmin.initializeApp({
-  credential: firebaseAdmin.credential.cert(serviceAccount),
-});
+try {
+  // Initialize Firebase Admin
+  firebaseAdmin.initializeApp({
+    credential: firebaseAdmin.credential.cert(serviceAccount),
+  });
 
-// Export the messaging service
+  console.log("Firebase Admin initialized successfully.");
+} catch (error) {
+  console.error("Error initializing Firebase Admin SDK:", error.message);
+  throw error;
+  // process.exit(1);
+}
+
 module.exports = firebaseAdmin;

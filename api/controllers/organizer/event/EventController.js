@@ -1,5 +1,8 @@
 const { Event } = require("../../../models/index");
-const { HTTP_STATUS_CODES } = require("../../../../config/constant");
+const {
+  HTTP_STATUS_CODES,
+  PAGINATION,
+} = require("../../../../config/constant");
 const { VALIDATION_RULES } = require("../../../../config/validationRules");
 const VALIDATOR = require("validatorjs");
 const moment = require("moment-timezone");
@@ -21,13 +24,6 @@ module.exports = {
         category,
       } = req.body;
       const organizerId = req.organizer.id;
-      console.log("organizerId: ", organizerId);
-      console.log("req.body: ", req.body);
-
-      // const dateString = req.body.date;
-      // const millidateseconds = new Date(dateString).getTime();
-
-      // console.log(millidateseconds); // 👉 1750012800000
 
       const dateString = req.body.date; // Date string from the request body
 
@@ -39,9 +35,6 @@ module.exports = {
 
       const istDate = istMoment.format("YYYY-MM-DD HH:mm:ss");
       const istMilliseconds = istMoment.valueOf();
-
-      console.log("IST Date:", istDate);
-      console.log("Milliseconds in IST:", istMilliseconds);
 
       const validation = new VALIDATOR(req.body, {
         title: VALIDATION_RULES.EVENT.TITLE,
@@ -62,6 +55,7 @@ module.exports = {
           error: validation.errors.all(),
         });
       }
+
       const existingEvent = await Event.findOne({
         where: {
           title: title,
@@ -80,11 +74,10 @@ module.exports = {
         ],
       });
 
-      console.log("existingEvent: ", existingEvent);
       if (existingEvent) {
         return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
           status: HTTP_STATUS_CODES.BAD_REQUEST,
-          message: "Event with the same title and date already exists.",
+          message: "Event with the same title  already exists.",
           data: "",
           error: "Event already exists",
         });
@@ -94,7 +87,7 @@ module.exports = {
         title,
         description,
         location,
-        date: millidateseconds,
+        date: istMilliseconds,
         startTime,
         endTime,
         capacity,
@@ -133,25 +126,22 @@ module.exports = {
       });
     }
   },
-
   //get all event under this organiser
   getAllEventsBySearch: async (req, res) => {
     try {
       const id = req.query.id || null;
       const organizerId = req.organizer.id;
 
-      const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 10;
+      const page = parseInt(req.query.page) || PAGINATION.DEFAULT_PAGE;
+      const limit = parseInt(req.query.limit) || PAGINATION.DEFAULT_LIMIT;
       const offset = (page - 1) * limit;
       let replacements = { limit, offset };
 
       let whereClause = `WHERE e.is_deleted = false `;
 
       if (id) {
-        console.log("first");
         whereClause += `\n AND e.id = :id `;
         replacements.id = id;
-        console.log("replacements: ", replacements);
       }
 
       let paginationClause = `LIMIT :limit OFFSET :offset`;
@@ -163,9 +153,9 @@ module.exports = {
           e.description,
           e.location,
           e.date,
-          e.start_time,
-          e.end_time,
-          e.available_seats AS capacity,
+          e.start_time AS "startTime",
+          e.end_time AS "endTime",
+          e.available_seats AS "capacity",
           e.category
         FROM event AS e
         ${whereClause}
@@ -177,7 +167,7 @@ module.exports = {
         replacements,
         type: Sequelize.QueryTypes.SELECT,
       });
-      console.log("events: ", events);
+
       const countQuery = `
       SELECT COUNT(e.id) AS total
       FROM event e
@@ -223,7 +213,7 @@ module.exports = {
   updateEvent: async (req, res) => {
     try {
       const id = req.query.id;
-      console.log("id: ", id);
+
       const {
         title,
         description,
@@ -272,31 +262,22 @@ module.exports = {
         });
       }
 
-      const updatedData = {};
-
-      await event.update(
-        {
-          title,
-          description,
-          location,
-          date,
-          startTime,
-          endTime,
-          capacity,
-          category,
-        },
-        {
-          where: {
-            id,
-            isDeleted: false,
-          },
-        }
-      );
+      await event.update({
+        title,
+        description,
+        location,
+        date,
+        startTime,
+        endTime,
+        capacity,
+        category,
+        updatedBy: req.organizer.id,
+      });
 
       return res.status(HTTP_STATUS_CODES.OK).json({
         status: HTTP_STATUS_CODES.OK,
         message: "Event updated successfully",
-        data: updatedData,
+        data: event,
         error: "",
       });
     } catch (error) {
