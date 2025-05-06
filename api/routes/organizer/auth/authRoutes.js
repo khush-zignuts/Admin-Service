@@ -9,8 +9,8 @@ router
   .post("/verifyOtp", authController.verifyOTP)
   .post("/login", authController.login)
   .post("/logOut", checkOrganizer, authController.logout)
-  .post("/change-password", checkOrganizer, authController.changePassword),
-  // .post("/forgot-password", authController.forgotPassword)
-  // .post("/reset-password", authController.resetPassword);
+  .post("/change-password", checkOrganizer, authController.changePassword)
+  .post("/forgot-password", authController.forgotPassword)
+  .post("/reset-password", authController.resetPassword);
 
-  (module.exports = router);
+module.exports = router;

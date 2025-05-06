@@ -10,7 +10,7 @@ router
     checkOrganizer,
     bookEventController.getAllUsersByBookingStatus
   )
-  .post("/acceptuser", checkOrganizer, bookEventController.acceptUserForEvent)
+  .post("/acceptUser", checkOrganizer, bookEventController.acceptUserForEvent)
   .post(
     "/declineUser",
     checkOrganizer,

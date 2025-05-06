@@ -16,8 +16,9 @@ const { VALIDATION_RULES } = require("../../../../config/validationRules");
 
 const { Organizer } = require("../../../models/index");
 const sendEmail = require("../../../helper/Mail/sendEmail");
-const { or } = require("sequelize");
+const { Op } = require("sequelize");
 const bcrypt = require("bcrypt");
+
 module.exports = {
   signup: async (req, res) => {
     try {
@@ -350,128 +351,141 @@ module.exports = {
       });
     }
   },
-  // forgotPassword: async (req, res) => {
-  //   try {
-  //     const { email } = req.body;
+  forgotPassword: async (req, res) => {
+    try {
+      const { email } = req.body;
 
-  //     const validation = new VALIDATOR(req.body, {
-  //       email: VALIDATION_RULES.ORGANIZER.EMAIL,
-  //     });
+      const validation = new VALIDATOR(req.body, {
+        email: VALIDATION_RULES.ORGANIZER.EMAIL,
+      });
 
-  //     if (validation.fails()) {
-  //       return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
-  //         status: HTTP_STATUS_CODES.BAD_REQUEST,
-  //         message: "Validation failed.",
-  //         data: "",
-  //         error: validation.errors.all(),
-  //       });
-  //     }
+      if (validation.fails()) {
+        return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
+          status: HTTP_STATUS_CODES.BAD_REQUEST,
+          message: "Validation failed.",
+          data: "",
+          error: validation.errors.all(),
+        });
+      }
 
-  //     const organizer = await Organizer.findOne({
-  //       where: { email: email, isDeleted: false },
-  //     });
+      const organizer = await Organizer.findOne({
+        where: { email: email, isDeleted: false },
+      });
 
-  //     if (!organizer) {
-  //       return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({
-  //         status: HTTP_STATUS_CODES.NOT_FOUND,
-  //         message: "User not found.",
-  //         data: "",
-  //         error: "USER_NOT_FOUND",
-  //       });
-  //     }
+      if (!organizer) {
+        return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({
+          status: HTTP_STATUS_CODES.NOT_FOUND,
+          message: "organizer not found.",
+          data: "",
+          error: "ORGANIZER_NOT_FOUND",
+        });
+      }
 
-  //     organizer.forgetPasswordToken = uuidv4();
-  //     organizer.forgetPasswordTokenExpiry = new Date(
-  //       Date.now() + 15 * 60 * 1000
-  //     ); // 15 min expiry
-  //     await organizer.save();
+      organizer.forgetPasswordToken = generateUUID();
+      organizer.forgetPasswordTokenExpiry = Math.floor(
+        (Date.now() + 15 * 60 * 1000) / 1000
+      );
+      // 15 min expiry
+      await organizer.save();
 
-  //     const templateData = {
-  //       userName: organizer.name,
-  //       email: organizer.email,
-  //       resetLink: `http://localhost:5001/api/organizer/auth/reset-password/${organizer.forgetPasswordToken}`,
-  //       appName: "Event Management",
-  //       year: new Date().getFullYear(),
-  //     };
+      console.log(
+        "organizer.forgetPasswordToken: ",
+        organizer.forgetPasswordToken
+      );
+      console.log(
+        "organizer.forgetPasswordTokenExpiry: ",
+        organizer.forgetPasswordTokenExpiry
+      );
 
-  //     await sendEmail(
-  //       email,
-  //       "Reset Your Password",
-  //       "../../assets/templates/reset-password-email.hbs",
-  //       templateData
-  //     );
+      const templateData = {
+        userName: organizer.name,
+        email: organizer.email,
+        resetLink: `http://localhost:5001/api/organizer/auth/reset-password/${organizer.forgetPasswordToken}`,
+        appName: "Event Management",
+        year: new Date().getFullYear(),
+      };
 
-  //     return res.status(HTTP_STATUS_CODES.OK).json({
-  //       status: HTTP_STATUS_CODES.OK,
-  //       message: "Password reset link has been sent to your email.",
-  //       data: { email },
-  //       error: "",
-  //     });
-  //   } catch (err) {
-  //     return res.status(HTTP_STATUS_CODES.SERVER_ERROR).json({
-  //       status: HTTP_STATUS_CODES.SERVER_ERROR,
-  //       message: "Server error",
-  //       data: "",
-  //       error: err.message,
-  //     });
-  //   }
-  // },
-  // resetPassword: async (req, res) => {
-  //   try {
-  //     const { email, token, newPassword } = req.body;
+      await sendEmail(
+        email,
+        "Reset Your Password",
+        "../../../assets/templates/reset-password-email.hbs",
+        templateData
+      );
 
-  //     const validation = new VALIDATOR(req.body, {
-  //       email: VALIDATION_RULES.ORGANIZER.EMAIL,
-  //       newPassword: VALIDATION_RULES.ORGANIZER.PASSWORD,
-  //     });
+      console.log("\n Send email with reset link");
 
-  //     if (validation.fails()) {
-  //       return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
-  //         status: HTTP_STATUS_CODES.BAD_REQUEST,
-  //         message: "Validation failed.",
-  //         data: "",
-  //         error: validation.errors.all(),
-  //       });
-  //     }
+      return res.status(HTTP_STATUS_CODES.OK).json({
+        status: HTTP_STATUS_CODES.OK,
+        message: "Password reset link has been sent to your email.",
+        data: { email },
+        error: "",
+      });
+    } catch (err) {
+      return res.status(HTTP_STATUS_CODES.SERVER_ERROR).json({
+        status: HTTP_STATUS_CODES.SERVER_ERROR,
+        message: "Server error",
+        data: "",
+        error: err.message,
+      });
+    }
+  },
+  resetPassword: async (req, res) => {
+    try {
+      const { email, token, newPassword } = req.body;
 
-  //     const organizer = await Organizer.findOne({
-  //       where: {
-  //         email,
-  //         forgetPasswordToken: token,
-  //         forgetPasswordTokenExpiry: { [Op.gt]: new Date() }, // token is still valid
-  //       },
-  //     });
+      const validation = new VALIDATOR(req.body, {
+        email: VALIDATION_RULES.ORGANIZER.EMAIL,
+        newPassword: VALIDATION_RULES.ORGANIZER.PASSWORD,
+      });
 
-  //     if (!organizer) {
-  //       return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({
-  //         status: HTTP_STATUS_CODES.NOT_FOUND,
-  //         message: "User not found.",
-  //         data: "",
-  //         error: "USER_NOT_FOUND",
-  //       });
-  //     }
+      if (validation.fails()) {
+        return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
+          status: HTTP_STATUS_CODES.BAD_REQUEST,
+          message: "Validation failed.",
+          data: "",
+          error: validation.errors.all(),
+        });
+      }
 
-  //     const hashedPassword = await hashPw(newPassword);
+      const organizer = await Organizer.findOne({
+        where: {
+          email,
+          forgetPasswordToken: token,
+          forgetPasswordTokenExpiry: { [Op.gt]: Math.floor(Date.now() / 1000) },
+          // token is still valid
+        },
+      });
 
-  //     await organizer.update({
-  //       password: hashedPassword,
-  //       forgetPasswordToken: null,
-  //       forgetPasswordTokenExpiry: null,
-  //     });
+      if (!organizer) {
+        return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({
+          status: HTTP_STATUS_CODES.NOT_FOUND,
+          message: "organizer not found.",
+          data: "",
+          error: "ORGANIZER_NOT_FOUND",
+        });
+      }
 
-  //     return res.status(HTTP_STATUS_CODES.OK).json({
-  //       status: HTTP_STATUS_CODES.OK,
-  //       message: "Password reset successful.",
-  //       data: "",
-  //       error: "",
-  //     });
-  //   } catch (err) {
-  //     return res.status(HTTP_STATUS_CODES.SERVER_ERROR).json({
-  //       status: HTTP_STATUS_CODES.SERVER_ERROR,
-  //       message: "Server error",
-  //       data: "",
-  //       error: err.message,
-  //     });
-  //   }
-  // },
+      const hashedPassword = await hashPw(newPassword);
+
+      await organizer.update({
+        password: hashedPassword,
+        forgetPasswordToken: null,
+        forgetPasswordTokenExpiry: null,
+      });
+
+      return res.status(HTTP_STATUS_CODES.OK).json({
+        status: HTTP_STATUS_CODES.OK,
+        message: "Password reset successful.",
+        data: "",
+        error: "",
+      });
+    } catch (err) {
+      return res.status(HTTP_STATUS_CODES.SERVER_ERROR).json({
+        status: HTTP_STATUS_CODES.SERVER_ERROR,
+        message: "Server error",
+        data: "",
+        error: err.message,
+      });
+    }
+  },
 };

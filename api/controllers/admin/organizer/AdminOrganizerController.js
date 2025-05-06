@@ -5,10 +5,6 @@ const {
 const { Sequelize, Op } = require("sequelize");
 const sequelize = require("../../../../config/db");
 const { Organizer } = require("../../../models/index");
-const sendEmail = require("../../../helper/Mail/sendEmail");
-const {
-  sendMessage,
-} = require("../../../helper/Notification/sendNotification");
 
 module.exports = {
   getAllOrganizer: async (req, res) => {
@@ -90,6 +86,7 @@ module.exports = {
   deactivateOrganizer: async (req, res) => {
     try {
       const { organizerId } = req.body;
+      console.log("organizerId: ", organizerId);
 
       // Check if organizerId is provided
 
@@ -107,16 +104,22 @@ module.exports = {
       SELECT COUNT(id) AS count
       FROM event AS e
       WHERE e.organizer_id = :organizerId
-        AND (e.start_time > NOW() OR (e.date = NOW() AND e.start_time > NOW()))
+        AND (
+          e.start_time > CAST(NOW() AS time) 
+           OR (
+                TO_TIMESTAMP(e.date / 1000)::date = CURRENT_DATE
+                AND e.start_time > CAST(NOW() AS time)
+              )
+        )
         AND e.is_deleted = false
         AND e.is_active = true
-
     `;
 
       const [result] = await sequelize.query(ongoingEventsQuery, {
         replacements: { organizerId },
         type: Sequelize.QueryTypes.SELECT,
       });
+      console.log("result: ", result);
 
       // If there are ongoing events, return an error
       if (parseInt(result.count) > 0) {
@@ -127,6 +130,25 @@ module.exports = {
           data: "",
           error: "",
         });
+      }
+
+      const organizer = await Organizer.findOne({
+        where: { id: organizerId, isDeleted: false },
+        attributes: ["id", "name", "email"],
+      });
+
+      if (organizer && organizer.email) {
+        const templateData = {
+          name: organizer.name,
+          year: new Date().getFullYear(),
+        };
+
+        await sendEmail(
+          email,
+          "Account Deactivated by Admin",
+          "../../assets/templates/organizer-eactivated-email.hbs",
+          templateData
+        );
       }
 
       // Deactivate organizer by setting is_active to false

@@ -34,8 +34,8 @@ module.exports = {
       CAPACITY: "required|integer|min:1|max:10000",
       ORGANIZER_ID: "required|string",
       CATEGORY: "required|string|min:3|max:50",
-      START_TIME: "required|time|validFormat", // Custom validation for HH:MM:SS
-      END_TIME: "required|time|validFormat|afterStartTime", // Custom validation to ensure endTime is after startTime
+      START_TIME: "required",
+      END_TIME: "required",
     },
 
     BOOKING: {

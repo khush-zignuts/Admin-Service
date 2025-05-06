@@ -6,15 +6,7 @@ const AdminOrganizerController = require("../../../controllers/admin/organizer/A
 const checkAdmin = require("../../../middleware/checkAdmin");
 
 router
-  .post(
-    "/deactivateOrganizer",
-    checkAdmin,
-    AdminOrganizerController.deactivateOrganizer
-  )
-  .get(
-    "/getAllOrganizer",
-    checkAdmin,
-    AdminOrganizerController.getAllOrganizer
-  );
+  .post("/deactivate", checkAdmin, AdminOrganizerController.deactivateOrganizer)
+  .get("/getAll", checkAdmin, AdminOrganizerController.getAllOrganizer);
 
 module.exports = router;

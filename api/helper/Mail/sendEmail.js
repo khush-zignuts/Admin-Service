@@ -27,7 +27,11 @@ const sendEmail = async (to, subject, templatePath, templateData) => {
     const htmlBody = compileTemplate(templatePath, templateData);
 
     // Save email to EmailQueue
-    if (subject !== "Verify Your Email - OTP") {
+    if (
+      subject !== "Verify Your Email - OTP" &&
+      subject !== "Reset Your Password"
+    ) {
+      console.log("first");
       await EmailQueue.create({
         to: to,
         subject: subject,

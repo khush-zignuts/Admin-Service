@@ -5,6 +5,8 @@ const router = express.Router();
 const AdminUserController = require("../../../controllers/admin/user/AdminUserController");
 const checkAdmin = require("../../../middleware/checkAdmin");
 
-router.get("/getallusers", checkAdmin, AdminUserController.getAllUsers);
+router
+  .get("/getall", checkAdmin, AdminUserController.getAllUsers)
+  .post("/deactivate", checkAdmin, AdminUserController.deactivateUser);
 
 module.exports = router;
