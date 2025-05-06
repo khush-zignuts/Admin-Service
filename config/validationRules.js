@@ -1,4 +1,4 @@
-require("dotenv").config();
+const { VALIDATE_PASSWORD } = require("./constant");
 
 module.exports = {
   //? Validation Rules
@@ -6,13 +6,13 @@ module.exports = {
     ADMIN: {
       NAME: "required|string|min:1|max:30",
       EMAIL: "required|email",
-      PASSWORD: process.env.VALIDATE_PASSWORD,
+      PASSWORD: VALIDATE_PASSWORD,
       ACCESS_TOKEN: "string",
     },
     USER: {
       NAME: "required|string|min:1|max:30",
       EMAIL: "required|email",
-      PASSWORD: process.env.VALIDATE_PASSWORD,
+      PASSWORD: VALIDATE_PASSWORD,
       PHONE_NUMBER: "string|min:10|regex:/^[0-9]{10,}$/",
       ACCESS_TOKEN: "string",
       OTP: "string|min:4|max:6",
@@ -21,7 +21,7 @@ module.exports = {
     ORGANIZER: {
       NAME: "required|string|min:1|max:30",
       EMAIL: "required|email",
-      PASSWORD: process.env.VALIDATE_PASSWORD,
+      PASSWORD: VALIDATE_PASSWORD,
       PHONE_NUMBER: "string|min:10|regex:/^[0-9]{10,}$/",
       ACCESS_TOKEN: "string",
       OTP: "string|min:4|max:6",

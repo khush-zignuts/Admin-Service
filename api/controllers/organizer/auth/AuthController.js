@@ -1,11 +1,13 @@
-const otpGenerator = require("otp-generator");
 const VALIDATOR = require("validatorjs");
 
 const jwt = require("jsonwebtoken");
-const { generateUUID } = require("../../../utils/utils");
-const { verifyOTP } = require("../../../utils/utils");
-const { hashPw } = require("../../../utils/utils");
-const { comparePassword } = require("../../../utils/utils");
+const {
+  generateUUID,
+  verifyOTP,
+  comparePassword,
+  hashPw,
+} = require("../../../utils/utils");
+
 const {
   HTTP_STATUS_CODES,
   TOKEN_EXPIRY,
@@ -14,7 +16,8 @@ const { VALIDATION_RULES } = require("../../../../config/validationRules");
 
 const { Organizer } = require("../../../models/index");
 const sendEmail = require("../../../helper/Mail/sendEmail");
-
+const { or } = require("sequelize");
+const bcrypt = require("bcrypt");
 module.exports = {
   signup: async (req, res) => {
     try {
@@ -53,10 +56,7 @@ module.exports = {
 
       const hashedPassword = await hashPw(password);
 
-      const otp = otpGenerator.generate(6, {
-        upperCase: false,
-        specialChars: false,
-      });
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
       const otpCreated = Math.floor(Date.now() / 1000);
       const uuid = generateUUID();
@@ -282,4 +282,196 @@ module.exports = {
       });
     }
   },
+
+  changePassword: async (req, res) => {
+    try {
+      const organizerId = req.organizer.id;
+      const { currentPassword, newPassword } = req.body;
+
+      const validation = new VALIDATOR(req.body, {
+        currentPassword: VALIDATION_RULES.ORGANIZER.PASSWORD,
+        newPassword: VALIDATION_RULES.ORGANIZER.PASSWORD,
+      });
+
+      if (validation.fails()) {
+        return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
+          status: HTTP_STATUS_CODES.BAD_REQUEST,
+          message: "Validation failed.",
+          data: "",
+          error: validation.errors.all(),
+        });
+      }
+
+      const organizer = await Organizer.findOne({
+        where: { id: organizerId, isDeleted: false },
+        attributes: ["id", "password"],
+      });
+
+      if (!organizer) {
+        return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({
+          status: HTTP_STATUS_CODES.NOT_FOUND,
+          message: "organizer not found.",
+          data: "",
+          error: "ORGANIZER_NOT_FOUND",
+        });
+      }
+
+      const isMatch = await bcrypt.compare(currentPassword, organizer.password);
+
+      if (!isMatch) {
+        return res.status(HTTP_STATUS_CODES.UNAUTHORIZED).json({
+          status: HTTP_STATUS_CODES.UNAUTHORIZED,
+          message: "Current password is incorrect.",
+          data: "",
+          error: "INVALID_CURRENT_PASSWORD",
+        });
+      }
+
+      const hashedNewPassword = await hashPw(newPassword);
+
+      await Organizer.update(
+        { password: hashedNewPassword },
+        { where: { id: organizer.id } }
+      );
+
+      return res.status(HTTP_STATUS_CODES.OK).json({
+        status: HTTP_STATUS_CODES.OK,
+        message: "Password updated successfully.",
+        data: "",
+        error: "",
+      });
+    } catch (error) {
+      console.error("Change Password Error:", error.message);
+      return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+        status: HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR,
+        message: "Server error.",
+        data: "",
+        error: "INTERNAL_SERVER_ERROR",
+      });
+    }
+  },
+  // forgotPassword: async (req, res) => {
+  //   try {
+  //     const { email } = req.body;
+
+  //     const validation = new VALIDATOR(req.body, {
+  //       email: VALIDATION_RULES.ORGANIZER.EMAIL,
+  //     });
+
+  //     if (validation.fails()) {
+  //       return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
+  //         status: HTTP_STATUS_CODES.BAD_REQUEST,
+  //         message: "Validation failed.",
+  //         data: "",
+  //         error: validation.errors.all(),
+  //       });
+  //     }
+
+  //     const organizer = await Organizer.findOne({
+  //       where: { email: email, isDeleted: false },
+  //     });
+
+  //     if (!organizer) {
+  //       return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({
+  //         status: HTTP_STATUS_CODES.NOT_FOUND,
+  //         message: "User not found.",
+  //         data: "",
+  //         error: "USER_NOT_FOUND",
+  //       });
+  //     }
+
+  //     organizer.forgetPasswordToken = uuidv4();
+  //     organizer.forgetPasswordTokenExpiry = new Date(
+  //       Date.now() + 15 * 60 * 1000
+  //     ); // 15 min expiry
+  //     await organizer.save();
+
+  //     const templateData = {
+  //       userName: organizer.name,
+  //       email: organizer.email,
+  //       resetLink: `http://localhost:5001/api/organizer/auth/reset-password/${organizer.forgetPasswordToken}`,
+  //       appName: "Event Management",
+  //       year: new Date().getFullYear(),
+  //     };
+
+  //     await sendEmail(
+  //       email,
+  //       "Reset Your Password",
+  //       "../../assets/templates/reset-password-email.hbs",
+  //       templateData
+  //     );
+
+  //     return res.status(HTTP_STATUS_CODES.OK).json({
+  //       status: HTTP_STATUS_CODES.OK,
+  //       message: "Password reset link has been sent to your email.",
+  //       data: { email },
+  //       error: "",
+  //     });
+  //   } catch (err) {
+  //     return res.status(HTTP_STATUS_CODES.SERVER_ERROR).json({
+  //       status: HTTP_STATUS_CODES.SERVER_ERROR,
+  //       message: "Server error",
+  //       data: "",
+  //       error: err.message,
+  //     });
+  //   }
+  // },
+  // resetPassword: async (req, res) => {
+  //   try {
+  //     const { email, token, newPassword } = req.body;
+
+  //     const validation = new VALIDATOR(req.body, {
+  //       email: VALIDATION_RULES.ORGANIZER.EMAIL,
+  //       newPassword: VALIDATION_RULES.ORGANIZER.PASSWORD,
+  //     });
+
+  //     if (validation.fails()) {
+  //       return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
+  //         status: HTTP_STATUS_CODES.BAD_REQUEST,
+  //         message: "Validation failed.",
+  //         data: "",
+  //         error: validation.errors.all(),
+  //       });
+  //     }
+
+  //     const organizer = await Organizer.findOne({
+  //       where: {
+  //         email,
+  //         forgetPasswordToken: token,
+  //         forgetPasswordTokenExpiry: { [Op.gt]: new Date() }, // token is still valid
+  //       },
+  //     });
+
+  //     if (!organizer) {
+  //       return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({
+  //         status: HTTP_STATUS_CODES.NOT_FOUND,
+  //         message: "User not found.",
+  //         data: "",
+  //         error: "USER_NOT_FOUND",
+  //       });
+  //     }
+
+  //     const hashedPassword = await hashPw(newPassword);
+
+  //     await organizer.update({
+  //       password: hashedPassword,
+  //       forgetPasswordToken: null,
+  //       forgetPasswordTokenExpiry: null,
+  //     });
+
+  //     return res.status(HTTP_STATUS_CODES.OK).json({
+  //       status: HTTP_STATUS_CODES.OK,
+  //       message: "Password reset successful.",
+  //       data: "",
+  //       error: "",
+  //     });
+  //   } catch (err) {
+  //     return res.status(HTTP_STATUS_CODES.SERVER_ERROR).json({
+  //       status: HTTP_STATUS_CODES.SERVER_ERROR,
+  //       message: "Server error",
+  //       data: "",
+  //       error: err.message,
+  //     });
+  //   }
+  // },
 };

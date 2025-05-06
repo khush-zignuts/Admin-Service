@@ -46,6 +46,15 @@ const User = sequelize.define(
       allowNull: true,
       field: "otp_created_at",
     },
+    forgotPwToken: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    forgotPwTokenExpiry: {
+      type: DataTypes.BIGINT, // store Unix timestamp (in seconds)
+      allowNull: true,
+    },
+
     ...CommonFields,
   },
   {

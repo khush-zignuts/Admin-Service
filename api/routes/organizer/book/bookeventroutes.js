@@ -6,9 +6,9 @@ const router = express.Router();
 //Booking fetch
 router
   .get(
-    "/allPendingRequest",
+    "/getAllUsersByBookingStatus",
     checkOrganizer,
-    bookEventController.getAllPendingRequest
+    bookEventController.getAllUsersByBookingStatus
   )
   .post("/acceptuser", checkOrganizer, bookEventController.acceptUserForEvent)
   .post(
