@@ -33,6 +33,11 @@ const Organizer = sequelize.define(
       field: "access_token",
       allowNull: true,
     },
+    fcmToken: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      field: "fcm_token",
+    },
     otp: {
       type: DataTypes.STRING(6),
       allowNull: true,

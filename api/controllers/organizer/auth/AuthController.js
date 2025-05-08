@@ -167,7 +167,7 @@ module.exports = {
 
   login: async (req, res) => {
     try {
-      const { email, password } = req.body;
+      const { email, password, fcmToken } = req.body;
 
       const validation = new VALIDATOR(req.body, {
         email: VALIDATION_RULES.ORGANIZER.EMAIL,
@@ -185,7 +185,7 @@ module.exports = {
 
       const organizer = await Organizer.findOne({
         where: { email, isDeleted: false },
-        attributes: ["id", "email", "password", "accessToken"],
+        attributes: ["id", "name", "email", "password", "accessToken"],
       });
 
       if (!organizer) {
@@ -213,12 +213,17 @@ module.exports = {
       });
 
       organizer.accessToken = token;
+      organizer.fcmToken = fcmToken;
       await organizer.save();
 
       return res.status(HTTP_STATUS_CODES.OK).json({
         status: HTTP_STATUS_CODES.OK,
         message: "Login successful.",
-        data: { token, organizerId: organizer.id },
+        data: {
+          token,
+          organizerId: organizer.id,
+          organizerName: organizer.name,
+        },
         error: "",
       });
     } catch (error) {
@@ -400,7 +405,7 @@ module.exports = {
       const templateData = {
         userName: organizer.name,
         email: organizer.email,
-        resetLink: `http://localhost:5001/api/organizer/auth/reset-password/${organizer.forgetPasswordToken}`,
+        resetLink: `http://localhost:5173/auth/forgot-password/reset-password/${user.forgetPasswordToken}`,
         appName: "Event Management",
         year: new Date().getFullYear(),
       };

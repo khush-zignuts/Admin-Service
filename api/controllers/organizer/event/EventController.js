@@ -129,7 +129,8 @@ module.exports = {
   //get all event under this organiser
   getAllEventsBySearch: async (req, res) => {
     try {
-      const id = req.query.id || null;
+      const query = req.query.search || null;
+
       const organizerId = req.organizer.id;
 
       const page = parseInt(req.query.page) || PAGINATION.DEFAULT_PAGE;
@@ -139,14 +140,14 @@ module.exports = {
 
       let whereClause = `WHERE e.is_deleted = false `;
 
-      if (id) {
-        whereClause += `\n AND e.id = :id `;
-        replacements.id = id;
+      if (query) {
+        whereClause += `\n AND e.title ILIKE :query`;
+        replacements.query = `%${query}%`;
       }
 
       let paginationClause = `LIMIT :limit OFFSET :offset`;
 
-      const query = `
+      const rawquery = `
         SELECT
           e.id,
           e.title,
@@ -163,7 +164,7 @@ module.exports = {
      
           `;
 
-      const events = await sequelize.query(query, {
+      const events = await sequelize.query(rawquery, {
         replacements,
         type: Sequelize.QueryTypes.SELECT,
       });
@@ -210,9 +211,60 @@ module.exports = {
       });
     }
   },
+
+  getEventById: async (req, res) => {
+    try {
+      const eventId = req.params.id;
+
+      const organizerId = req.organizer.id;
+
+      const event = await Event.findOne({
+        where: {
+          id: eventId,
+          isDeleted: false,
+        },
+        attributes: [
+          "id",
+          "title",
+          "description",
+          "location",
+          "date",
+          "startTime",
+          "endTime",
+          "capacity",
+          "category",
+        ],
+      });
+
+      if (!event) {
+        return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({
+          status: HTTP_STATUS_CODES.NOT_FOUND,
+          message: "Event not found",
+          data: "",
+          error: "No event with the provided ID",
+        });
+      }
+      return res.status(HTTP_STATUS_CODES.OK).json({
+        status: HTTP_STATUS_CODES.OK,
+        message: "Event fetched successfully",
+        data: event,
+        error: "",
+      });
+    } catch (error) {
+      console.error("Fetch Event Error:", error);
+      return res.status(HTTP_STATUS_CODES.SERVER_ERROR).json({
+        status: HTTP_STATUS_CODES.SERVER_ERROR,
+        message: "Failed to fetch event",
+        data: "",
+        error: error.message || "Internal server error",
+      });
+    }
+  },
+
   updateEvent: async (req, res) => {
     try {
-      const id = req.query.id;
+      const id = req.params.id;
+      console.log("id: ", id);
 
       const {
         title,
@@ -224,6 +276,7 @@ module.exports = {
         capacity,
         category,
       } = req.body;
+      console.log("req.body: ", req.body);
 
       const validation = new VALIDATOR(req.body, {
         title: VALIDATION_RULES.EVENT.TITLE,
@@ -262,11 +315,13 @@ module.exports = {
         });
       }
 
+      const timestampDate = new Date(date).getTime();
+
       await event.update({
         title,
         description,
         location,
-        date,
+        date: timestampDate,
         startTime,
         endTime,
         capacity,
@@ -293,7 +348,8 @@ module.exports = {
 
   deleteEvent: async (req, res) => {
     try {
-      const eventId = req.query.id;
+      const eventId = req.params.id;
+      console.log("eventId: ", eventId);
       const organizerId = req.organizer.id;
 
       const event = await Event.findOne({

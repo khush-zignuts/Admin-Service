@@ -11,7 +11,8 @@ router
     checkOrganizer,
     eventController.getAllEventsBySearch
   )
-  .post("/update", checkOrganizer, eventController.updateEvent)
-  .post("/delete", checkOrganizer, eventController.deleteEvent);
+  .get("/getEventById/:id", checkOrganizer, eventController.getEventById)
+  .post("/update/:id", checkOrganizer, eventController.updateEvent)
+  .post("/delete/:id", checkOrganizer, eventController.deleteEvent);
 
 module.exports = router;

@@ -23,6 +23,7 @@ module.exports = {
     try {
       const organizerId = req.organizer.id;
       const status = req.query.status?.toLowerCase() || "pending"; // default to 'pending'
+      console.log("status: ", status);
       const page = parseInt(req.query.page) || PAGINATION.DEFAULT_PAGE;
       const limit = parseInt(req.query.limit) || PAGINATION.DEFAULT_LIMIT;
       const offset = (page - 1) * limit;
@@ -68,6 +69,7 @@ module.exports = {
         replacements,
         type: Sequelize.QueryTypes.SELECT,
       });
+      console.log("users: ", users);
 
       const countQuery = `
         SELECT COUNT(id) AS total
@@ -81,6 +83,7 @@ module.exports = {
       });
 
       const totalRecords = parseInt(countResult[0].total);
+      console.log("totalRecords: ", totalRecords);
       const totalPages = Math.ceil(totalRecords / limit);
 
       if (totalRecords === 0) {
@@ -123,7 +126,10 @@ module.exports = {
 
   acceptUserForEvent: async (req, res) => {
     try {
-      const { userId, eventId, fcmToken } = req.body;
+      const { userId, eventId } = req.body;
+
+      console.log("req.body: ", req.body);
+
       // const organizerId = req.organizer.id;
 
       const booked = await Booking.findOne({
@@ -196,15 +202,15 @@ module.exports = {
 
       const user = await User.findOne({
         where: { id: userId, isDeleted: false },
-        attributes: ["id", "name", "email", "phoneNumber"],
+        attributes: ["id", "name", "email", "phoneNumber", "fcmToken"],
       });
 
-      if (!user) {
-        return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({
-          status: HTTP_STATUS_CODES.NOT_FOUND,
-          message: "User not found.",
+      if (!user || !user.fcmToken) {
+        return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
+          status: HTTP_STATUS_CODES.BAD_REQUEST,
+          message: "User FCM token not found.",
           data: "",
-          error: "",
+          error: "FCM_TOKEN_MISSING",
         });
       }
 
@@ -225,7 +231,7 @@ module.exports = {
       await sendEmail(
         user.email,
         "You have been accepted for the event!",
-        "../../assets/templates/event-acceptance-email.hbs",
+        "../../../assets/templates/event-acceptance-email.hbs",
         emailTemplateData
       );
 
@@ -236,16 +242,17 @@ module.exports = {
                     feel free to reach out to the organizer, 
                     ${organizer.name}, via the chat button provided.
 `;
+      console.log("user.fcmToken: ", user.fcmToken);
 
       const message = {
-        token: fcmToken,
+        token: user.fcmToken,
         notification: {
           title,
           body,
         },
         data: {
-          eventId,
-          userId,
+          eventId: String(eventId),
+          userId: String(userId),
         },
       };
 
